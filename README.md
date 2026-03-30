@@ -23,6 +23,8 @@ A personal data engineering platform built to learn and iterate on AWS, Terrafor
 
 ### Data flow
 
+![GH Archive pipeline](docs/gharchive_pipeline_dataflow.svg)
+
 ```
 GitHub Archive (gharchive.org)
         │
@@ -111,12 +113,12 @@ data-platform/
 │   │   ├── outputs.tf
 │   │   └── modules/
 │   │       ├── s3/main.tf
-│   │       ├── lambda/main.tf
-│   │       └── ecr/main.tf      # reserved, not used yet
+│   │       └── lambda/main.tf
 │   └── openssh-logs/            # future — security project
 │       └── ...
 ├── dbt/                         # shared dbt project (all sources)
 ├── streamlit/                   # Streamlit apps
+├── docs/                        # architecture diagrams
 ├── Makefile
 ├── README.md
 └── CLAUDE.md

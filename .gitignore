@@ -1,0 +1,15 @@
+# Claude Code
+.claude/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Python
+__pycache__/
+*.pyc
+
+# Build artifacts
+*.zip
