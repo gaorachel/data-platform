@@ -79,6 +79,7 @@ If unsure which bucket a new source belongs to, ask before writing any code.
 - **No second Lambda for Snowflake** — AUTO_REFRESH via SQS handles Snowflake updates automatically.
 - **No requirements change without asking** — `requests` and `boto3` are the only Lambda dependencies.
 - **No shared Terraform state between projects** — each project under `terraform/` is fully independent. Shared infra lives in `terraform/shared/` with its own state.
+- **`snowflake_external_table` is not managed by Terraform** — the Snowflake provider v1.x has a bug that prevents creating external tables with `AUTO_REFRESH = TRUE`. The `GHARCHIVE_EVENTS` external table is defined in `snowflake/setup.sql` and must be run manually once after `terraform apply`.
 
 ---
 

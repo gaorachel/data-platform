@@ -33,11 +33,11 @@ init:
 
 # Plan with a fresh build so source_code_hash stays accurate
 plan: build
-	cd $(TF_GHARCHIVE) && terraform plan -var="s3_bucket_name=$(BUCKET_NAME)"
+	cd $(TF_GHARCHIVE) && terraform plan -var="s3_bucket_name=$(BUCKET_NAME)" -var-file="snowflake.tfvars"
 
 # Apply with a fresh build
 apply: build
-	cd $(TF_GHARCHIVE) && terraform apply -var="s3_bucket_name=$(BUCKET_NAME)"
+	cd $(TF_GHARCHIVE) && terraform apply -var="s3_bucket_name=$(BUCKET_NAME)" -var-file="snowflake.tfvars"
 
 # Push a new zip to an already-provisioned Lambda (skips terraform)
 deploy: build
