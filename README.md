@@ -25,40 +25,6 @@ A personal data engineering platform built to learn and iterate on AWS, Terrafor
 
 ![GH Archive pipeline](docs/gharchive_pipeline_dataflow.svg)
 
-```
-GitHub Archive (gharchive.org)
-        │
-        │  cron: 5 past every hour
-        ▼
-   EventBridge
-        │
-        ▼
-   Lambda (zip)          ← Phase 1: time-series ingestion
-   fetch .gz → S3
-        │
-        ▼
-   S3 bucket
-   s3://data-platform-main/
-   raw/gharchive/event_date=YYYY-MM-DD/event_hour=H/
-        │
-        │  S3 event notification
-        ▼
-   SQS queue             ← Phase 2: event-driven propagation
-        │
-        ▼
-   Snowflake external table (AUTO_REFRESH)
-        │
-        ▼
-   dbt staging (view)    ← Phase 3: transformation
-        │
-        ▼
-   dbt marts (table)
-        │
-   ┌────┴────┬──────────┐
-   ▼         ▼          ▼
-Lightdash  Streamlit  Airflow   ← Phase 4: serving
-```
-
 ### S3 bucket strategy
 
 Both buckets are data lakes. They are separated by **data classification**, not by domain or source. Naming reflects access level, not content type — so the naming stays valid as new sources are added.
