@@ -1,6 +1,6 @@
 # data-platform
 
-Analytics engineering platform ingesting, transforming, and serving data from multiple sources.
+End-to-end data analytics platform covering ingestion, storage, transformation, and BI.
 
 ## Stack
 
@@ -26,7 +26,7 @@ Analytics engineering platform ingesting, transforming, and serving data from mu
 
 Two pipelines feed the GitHub analysis layer — hourly event ingestion from GitHub Archive and weekly repository metadata enrichment from the GitHub REST API.
 
-![GitHub analysis architecture](docs/gh-analysis-architecture.svg)
+![GitHub analysis architecture](docs/github-analysis-architecture.svg)
 
 ## Running locally
 
@@ -43,10 +43,6 @@ make deploy && make invoke
 
 See individual project READMEs for details.
 
-## Docs
-
-- [`docs/gh-analysis-architecture.svg`](docs/gh-analysis-architecture.svg) — GitHub analysis pipeline architecture
-- [`docs/decisions/`](docs/decisions/) — architecture decision records
 
 ## S3 bucket strategy
 
