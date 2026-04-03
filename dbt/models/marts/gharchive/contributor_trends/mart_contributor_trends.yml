@@ -1,0 +1,30 @@
+version: 2
+
+models:
+  - name: mart_contributor_trends
+    description: >
+      Daily push-event contribution counts split by contributor type (human vs bot).
+      Grain: one row per event_date + contributor_type. Incremental with a 3-day
+      lookback window so late-arriving events are captured on rerun.
+    columns:
+      - name: event_date
+        description: "Date of the push events. Part of the composite unique key."
+        tests:
+          - not_null
+
+      - name: contributor_type
+        description: "'human' or 'bot'. Part of the composite unique key."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['human', 'bot']
+
+      - name: event_count
+        description: "Total number of PushEvents for this date and contributor type."
+        tests:
+          - not_null
+
+      - name: unique_contributors
+        description: "Count of distinct actor logins for this date and contributor type."
+        tests:
+          - not_null
