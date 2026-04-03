@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: int_gharchive__events_enriched
+    description: >
+      PushEvents classified as human or bot (from int_gharchive__events_classified),
+      enriched with repository metadata (language, topics) via a left join on repo_name.
+      Unmatched repos are retained with NULL language and topics. Feeds the
+      language_activity mart.
+    columns:
+      - name: event_date
+        description: "Date of the push event (partition key from S3 path)."
+        tests:
+          - not_null
+
+      - name: event_hour
+        description: "Hour of the push event, 0–23."
+        tests:
+          - not_null
+
+      - name: event_id
+        description: "GitHub event ID."
+        tests:
+          - not_null
+
+      - name: event_type
+        description: "Always 'PushEvent' in this model."
+        tests:
+          - not_null
+
+      - name: created_at
+        description: "Timestamp when the event was created."
+
+      - name: actor_login
+        description: "GitHub login of the actor."
+
+      - name: actor_type
+        description: "Actor type from the event payload (e.g. 'User', 'Bot')."
+
+      - name: repo_name
+        description: "Repository name in owner/repo format."
+
+      - name: is_bot
+        description: "TRUE when actor_type = 'Bot' OR actor_login matches bot patterns."
+        tests:
+          - not_null
+
+      - name: contributor_type
+        description: "'bot' if is_bot is TRUE, 'human' otherwise."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['human', 'bot']
+
+      - name: language
+        description: >
+          Primary programming language of the repository. NULL when the repo is not found
+          in the metadata table or GitHub reports no language.
+
+      - name: topics
+        description: "Array of topic tags for the repository. NULL when the repo is not found in the metadata table."

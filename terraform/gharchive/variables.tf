@@ -49,3 +49,9 @@ variable "snowflake_notification_channel_arn" {
   type        = string
   default     = "arn:aws:sqs:eu-west-1:779060063003:sf-snowpipe-AIDA3KY4ZFMNW3IYDWVZW-Zq76jGychIj-y-4kbop3mw"
 }
+
+variable "lambda_repos_zip_path" {
+  description = "Path to the github-repo-enrichment Lambda deployment zip, relative to this directory. Build with 'make build-repos' before applying."
+  type        = string
+  default     = "../../ingestion/github-repos/lambda.zip"
+}

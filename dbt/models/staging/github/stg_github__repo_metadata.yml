@@ -1,0 +1,56 @@
+version: 2
+
+sources:
+  - name: github
+    database: DATA_PLATFORM
+    schema: GHARCHIVE
+    description: "GitHub repository metadata loaded from S3 via Snowflake external table."
+    tables:
+      - name: github_repo_metadata
+        description: >
+          External table over S3 enriched repo metadata JSON files partitioned by enriched_date.
+          Refreshed automatically via SQS notifications from S3.
+        columns:
+          - name: enriched_date
+            description: "Date the metadata was fetched from the GitHub API, parsed from the S3 key partition."
+          - name: value
+            description: "Full repository metadata payload as a VARIANT (JSON) column."
+
+models:
+  - name: stg_github__repo_metadata
+    description: >
+      Staged GitHub repository metadata. Extracts typed columns from the VALUE VARIANT column
+      in the GITHUB_REPO_METADATA external table. Deduplicated to the latest enriched_date
+      per repo so downstream joins get one row per repository.
+    columns:
+      - name: repo_full_name
+        description: "Repository full name in owner/repo format (e.g. torvalds/linux)."
+        tests:
+          - not_null
+          - unique
+
+      - name: language
+        description: "Primary programming language of the repository as reported by GitHub. NULL if undetected."
+
+      - name: topics
+        description: "Array of topic tags associated with the repository."
+
+      - name: stargazers_count
+        description: "Number of stars at the time the metadata was fetched."
+
+      - name: forks_count
+        description: "Number of forks at the time the metadata was fetched."
+
+      - name: is_fork
+        description: "TRUE if this repository is a fork of another repository."
+
+      - name: repo_created_at
+        description: "Timestamp when the repository was originally created on GitHub."
+
+      - name: description
+        description: "Repository description text as set by the owner. NULL if not provided."
+
+      - name: enriched_date
+        description: "Date the metadata snapshot was fetched. Reflects the most recent enrichment date after deduplication."
+        tests:
+          - not_null
