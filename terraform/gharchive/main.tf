@@ -156,6 +156,111 @@ module "snowflake" {
 # Routes object-created events for .json.gz files under raw/gharchive/ directly
 # to Snowflake's managed SQS queue for AUTO_REFRESH.
 
+# ── Locals ────────────────────────────────────────────────────────────────────
+# Snowflake account identifier expected by snowflake-connector-python:
+# orgname-accountname (e.g. "myorg-myaccount")
+
+locals {
+  snowflake_account = "${var.snowflake_organization_name}-${var.snowflake_account_name}"
+}
+
+# ── Secrets Manager: GitHub PAT ───────────────────────────────────────────────
+# Stores the GitHub Personal Access Token used by the repo-enrichment Lambda.
+# The placeholder value is written on first apply; replace it manually:
+#   aws secretsmanager put-secret-value \
+#     --secret-id data-platform/github/pat \
+#     --secret-string '{"token":"ghp_..."}'
+# The lifecycle block prevents Terraform from overwriting a real token on
+# subsequent applies.
+
+resource "aws_secretsmanager_secret" "github_pat" {
+  name        = "data-platform/github/pat"
+  description = "GitHub PAT for repo metadata enrichment"
+}
+
+resource "aws_secretsmanager_secret_version" "github_pat" {
+  secret_id     = aws_secretsmanager_secret.github_pat.id
+  secret_string = jsonencode({ token = "REPLACE_ME" })
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
+# ── Snowflake IAM: extend to raw/github-repos/* ───────────────────────────────
+# The existing snowflake_s3_read policy covers raw/gharchive/* only.
+# This separate policy grants read on the new prefix without modifying the
+# existing policy. Both policies attach to the same role.
+
+resource "aws_iam_role_policy" "snowflake_s3_read_github_repos" {
+  name = "snowflake-s3-read-github-repos"
+  role = aws_iam_role.snowflake_integration.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:ListBucket",
+        "s3:GetBucketLocation"
+      ]
+      Resource = [
+        data.aws_s3_bucket.main.arn,
+        "${data.aws_s3_bucket.main.arn}/raw/github-repos/*"
+      ]
+    }]
+  })
+}
+
+# ── Lambda: github-repo-enrichment ───────────────────────────────────────────
+
+module "lambda_github_repos" {
+  source = "./modules/lambda-repos"
+
+  function_name   = "github-repo-enrichment"
+  s3_bucket_name  = data.aws_s3_bucket.main.bucket
+  s3_bucket_arn   = data.aws_s3_bucket.main.arn
+  lambda_zip_path = var.lambda_repos_zip_path
+  secret_arn      = aws_secretsmanager_secret.github_pat.arn
+
+  environment_variables = {
+    S3_BUCKET           = data.aws_s3_bucket.main.bucket
+    SECRET_NAME         = aws_secretsmanager_secret.github_pat.name
+    SNOWFLAKE_ACCOUNT   = local.snowflake_account
+    SNOWFLAKE_USER      = var.snowflake_user
+    SNOWFLAKE_PASSWORD  = var.snowflake_password
+    SNOWFLAKE_DATABASE  = "DATA_PLATFORM"
+    SNOWFLAKE_SCHEMA    = "GHARCHIVE"
+    SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
+    TOP_N_REPOS         = "100"
+  }
+}
+
+# ── EventBridge: weekly repo enrichment ───────────────────────────────────────
+# Runs Sundays at 02:00 UTC — quiet period, avoids GitHub API peak hours.
+
+resource "aws_cloudwatch_event_rule" "github_repos_weekly" {
+  name                = "github-repo-enrichment-schedule"
+  description         = "Triggers the github-repo-enrichment Lambda weekly on Sundays at 02:00 UTC"
+  schedule_expression = "cron(0 2 ? * SUN *)"
+}
+
+resource "aws_cloudwatch_event_target" "github_repos_lambda" {
+  rule      = aws_cloudwatch_event_rule.github_repos_weekly.name
+  target_id = "github-repo-enrichment"
+  arn       = module.lambda_github_repos.function_arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_github_repos" {
+  statement_id  = "AllowEventBridgeInvokeGithubRepos"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda_github_repos.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.github_repos_weekly.arn
+}
+
 resource "aws_s3_bucket_notification" "gharchive_events" {
   bucket = data.aws_s3_bucket.main.id
 
