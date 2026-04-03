@@ -6,141 +6,122 @@ Instructions for Claude Code working on this repo. Read this before writing any 
 
 ## Project context
 
-This is a data engineering platform modelled on real-world practices. The primary goal is learning AWS, Terraform, and analytics engineering patterns — not just getting something working. Prefer the correct pattern over the quick one, and always explain the tradeoff when there is one.
+A data engineering platform modelled on real-world practices. Prefer the correct pattern over the quick one, and always explain the tradeoff when there is one.
 
-The owner is a mid-senior analytics engineer comfortable with Python, SQL, dbt, and Airflow. New to AWS and Terraform. Explanations should reflect that — don't over-explain dbt or SQL, but do explain AWS/Terraform decisions clearly.
-
----
-
-## Repo structure
-
-```
-data-platform/
-├── ingestion/
-│   ├── gharchive/               # Lambda function + dependencies
-│   └── openssh-logs/            # future — security project
-├── terraform/
-│   ├── shared/                  # shared infra: S3 buckets, KMS keys — apply first
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   └── outputs.tf
-│   ├── gharchive/               # independent state, references shared bucket
-│   │   ├── main.tf
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── modules/
-│   │       ├── s3/main.tf
-│   │       ├── lambda/main.tf
-│   │       └── ecr/main.tf
-│   └── openssh-logs/            # future — own state, references restricted bucket
-├── dbt/                         # shared across all sources
-├── streamlit/
-├── Makefile
-├── README.md
-└── CLAUDE.md
-```
-
-`terraform/shared/` is always applied first — it provisions the S3 buckets and KMS keys that project-level Terraform references. When adding a new ingestion source, create `ingestion/<source-name>/` and `terraform/<source-name>/` with its own independent state.
+The owner is a mid-senior analytics engineer comfortable with Python, SQL, dbt, and Airflow. New to AWS and Terraform. Don't over-explain dbt or SQL, but do explain AWS/Terraform decisions clearly.
 
 ---
 
-## S3 bucket strategy — classification drives design
+## S3 bucket strategy
 
-Both buckets are data lakes. They are split by **data classification**, not by domain or source. Bucket names reflect access level so the naming stays valid as new sources are added over time.
+Buckets are split by **data classification**, not by source or domain.
 
 | Bucket | Classification | Use for | Controls |
 |---|---|---|---|
-| `s3://data-platform-main/` | General | Public data, non-sensitive analytics sources | Standard IAM, prefix-scoped per Lambda |
-| `s3://data-platform-restricted/` | Restricted | Security logs, PII, PCI, compliance-sensitive data | Separate KMS key, CloudTrail enabled, strict IAM |
+| `s3://data-platform-main-<account_id>/` | General | Public, non-sensitive analytics data | Standard IAM, prefix-scoped per Lambda |
+| `s3://data-platform-restricted-<account_id>/` | Restricted | Security logs, PII, PCI, compliance data | Separate KMS key, CloudTrail enabled, strict IAM |
 
-**Naming rationale:**
-- `main` — primary landing zone for general analytics. Not named after a domain (e.g. "analytics" or "lake") so it stays accurate as sources are added.
-- `restricted` — signals access-controlled data regardless of domain, such as Security logs or other PII, PCI type of data.
-
-**General analytics sources** (e.g. gharchive) land in `data-platform-main/`, separated by prefix:
+General analytics sources share `data-platform-main`, separated by prefix:
 ```
-s3://data-platform-main/
-└── raw/gharchive/event_date=YYYY-MM-DD/event_hour=H/
+s3://data-platform-main-<account_id>/
+├── raw/gharchive/event_date=YYYY-MM-DD/event_hour=H/
+└── raw/github-repos/enriched_date=YYYY-MM-DD/
 ```
-
-**Restricted sources** (e.g. openssh-logs, future PII, PCI sources) land in `data-platform-restricted/` — never in `data-platform-main/`.
 
 If unsure which bucket a new source belongs to, ask before writing any code.
 
 ---
 
-## Hard rules — never break these without explicit instruction
+## Hard rules — never break without explicit instruction
 
-- **Respect data classification** — restricted/PII data goes to `data-platform-restricted/`, general analytics goes to `data-platform-main/`. Never mix them.
-- **No Docker / no ECR** — Lambda is zip deploy only. Do not add a Dockerfile unless asked.
-- **No COPY INTO** — data stays in S3, queried via Snowflake external table. Do not suggest or write COPY INTO.
-- **No USER_SPECIFIED partitions** — Snowflake external table uses `PARTITION_TYPE = AUTO`.
-- **No S3 Terraform backend yet** — state is local. Do not add a backend block unless asked.
-- **No second Lambda for Snowflake** — AUTO_REFRESH via SQS handles Snowflake updates automatically.
-- **No requirements change without asking** — `requests` and `boto3` are the only Lambda dependencies.
-- **No shared Terraform state between projects** — each project under `terraform/` is fully independent. Shared infra lives in `terraform/shared/` with its own state.
-- **`snowflake_external_table` is not managed by Terraform** — the Snowflake provider v1.x has a bug that prevents creating external tables with `AUTO_REFRESH = TRUE`. The `GHARCHIVE_EVENTS` external table is defined in `snowflake/setup.sql` and must be run manually once after `terraform apply`.
+- **Respect data classification** — never mix general and restricted data across buckets
+- **No Docker / no ECR** — Lambda is zip deploy only
+- **No COPY INTO** — data stays in S3, queried via Snowflake external table
+- **No USER_SPECIFIED partitions** — use `PARTITION_TYPE = AUTO`
+- **No S3 Terraform backend yet** — state is local
+- **No hardcoded secrets** — API keys go in AWS Secrets Manager, never in env vars, code, or tfvars
+- **No requirements change without asking** — check before adding new Lambda dependencies
+- **No shared Terraform state between projects** — each project is fully independent
+- **`snowflake_external_table` is NOT managed by Terraform** — use `snowflake/setup.sql` and `snowflake/setup_repos.sql` instead (see Snowflake provider bug note below)
+- **Snowflake provider** — use `snowflake-labs/snowflake` not `hashicorp/snowflake`
 
 ---
 
-## Architecture decisions to respect
+## Snowflake provider bug
+
+`snowflake_external_table` causes a panic in `snowflake-labs/snowflake` v1.x on import:
+```
+panic: interface conversion: sdk.ObjectIdentifier is sdk.AccountObjectIdentifier,
+not sdk.SchemaObjectIdentifier
+```
+
+External tables are managed via SQL files instead. Run these once after `terraform apply`:
+- `snowflake/setup.sql` — creates `GHARCHIVE_EVENTS`
+- `snowflake/setup_repos.sql` — creates `GITHUB_REPO_METADATA`, extends storage integration allowed locations
+
+Do not attempt to add `snowflake_external_table` back to Terraform unless the bug is confirmed fixed.
+
+---
+
+## Architecture decisions
 
 **S3 partitioning**
-S3 keys within each bucket follow this convention:
+Partitioned by event time, not ingestion time. `ingested_at` in S3 object metadata only.
 ```
 raw/<source>/event_date=YYYY-MM-DD/event_hour=H/filename
 ```
-Partitioned by event time (the hour the data represents), not ingestion time. `ingested_at` is stored in S3 object metadata only.
+
+**Snowflake AUTO_REFRESH**
+S3 event notifications point at Snowflake's managed SQS queue (`sf-snowpipe-...`). No customer-managed SQS queue. AUTO_REFRESH triggers automatically when new files land.
 
 **Lambda**
-- Runtime: Python 3.12
-- Deploy: zip package
-- Timeout: 300s
-- Memory: 512MB
-- IAM: scoped to `s3:PutObject` on `raw/<source>/*` prefix only — least privilege, never grant access to the full bucket or another source's prefix
+- Runtime: Python 3.12, zip deploy
+- gharchive: 512MB, 300s, IAM scoped to `raw/gharchive/*`
+- github-repos: 256MB, 300s, IAM scoped to `raw/github-repos/*` and Secrets Manager PAT secret
+
+**Secrets**
+- GitHub PAT: `data-platform/github/pat` in AWS Secrets Manager
+- Lambda reads at runtime via boto3 — never in environment variables or code
+- Snowflake credentials: `terraform/gharchive/snowflake.tfvars` (gitignored)
 
 **Terraform**
-- `terraform/shared/` provisions S3 buckets and KMS keys — always apply this first
-- Project-level Terraform references shared outputs via input variables
-- Use modules — do not put everything in `main.tf`
-- One module per AWS service: `s3`, `lambda`, `ecr`
-- Variables go in `variables.tf`, never hardcoded in resource blocks
+- `terraform/shared/` always applied first
+- Use modules, never put everything in `main.tf`
+- Variables in `variables.tf`, never hardcoded
 - Never commit `.tfvars` files
 
 **dbt**
-- Staging models: `view` materialisation
-- Mart models: `table` materialisation, incremental where possible
-- All sources feed the same shared dbt project under `dbt/`
-- Do not change materialisation type without asking
+- Staging: view materialisation
+- Intermediate: view materialisation
+- Marts: incremental table, delete+insert, last 3 days incremental filter
+- All models include Lightdash meta tags
+- Dashboard YAML definitions in `dbt/dashboards/`
+- Do not change materialisation without asking
 
----
-
-## Current phase
-
-**Phase 1 — Ingestion (active)**
-EventBridge (cron 5 past every hour) → Lambda → `s3://data-platform-main/raw/gharchive/`
-
-Phase 2 and beyond are planned but not started. Do not write Phase 2 code unless explicitly asked. The `openssh-logs` project is planned but not started — do not create code for it unless asked.
+**Snowflake connection**
+- Database: `DATA_PLATFORM`
+- Schema: `GHARCHIVE`
+- Warehouse: `COMPUTE_WH`
 
 ---
 
 ## Code style
 
 - Python: PEP8, type hints, small single-purpose functions
-- Terraform: lowercase resource names, underscores not hyphens, always include `description` on variables
+- Terraform: lowercase resource names, underscores not hyphens, `description` on all variables
 - SQL: uppercase keywords, snake_case identifiers
-- Commit messages: `type: short description` e.g. `feat: add gharchive lambda`, `chore: init terraform modules`
+- Commit messages: `type(scope): description` e.g. `feat(gharchive): add enrichment lambda`
 
 ---
 
 ## When you are unsure
 
 Ask before:
-- Adding a new AWS service not already in the architecture
+- Adding a new AWS service not in the architecture
 - Changing an existing design decision
-- Adding a Python dependency to `requirements.txt`
-- Modifying Terraform state configuration
-- Deciding which S3 bucket a new data source belongs to
-- Adding code to a project folder other than the one being worked on
+- Adding a Python dependency
+- Modifying Terraform state
+- Deciding which S3 bucket a new source belongs to
+- Adding code outside the current project folder
 
 Do not silently make a different choice and explain it afterwards.
