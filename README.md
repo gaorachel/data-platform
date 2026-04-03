@@ -1,6 +1,6 @@
 # data-platform
 
-Analytics engineering platform ingesting, transforming, and serving data from multiple sources.
+End-to-end data analytics platform covering ingestion, storage, transformation, and BI.
 
 ## Stack
 
