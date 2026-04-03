@@ -15,11 +15,12 @@ End-to-end data analytics platform covering ingestion, storage, transformation, 
 | Language | Python, SQL (Snowflake) |
 | CI/CD | GitHub Actions |
 
-## Projects
+## Ingestion Pipelines
 
-| Project | Status | Description |
+| Pipeline | Status | Description |
 |---|---|---|
 | [gharchive](ingestion/gharchive/README.md) | Active | Hourly GitHub public event ingestion |
+| [github-repos](ingestion/github-repos/) | Active | Weekly GitHub repository metadata enrichment |
 | openssh-logs | Planned | Security log analytics |
 
 ## GitHub analysis pipelines
