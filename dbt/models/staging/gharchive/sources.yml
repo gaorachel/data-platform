@@ -1,0 +1,20 @@
+version: 2
+
+sources:
+  - name: gharchive
+    database: DATA_PLATFORM
+    schema: GHARCHIVE
+    description: "Raw GitHub Archive events loaded from S3 via Snowflake external table with AUTO_REFRESH."
+    tables:
+      - name: gharchive_events
+        description: >
+          External table over S3 raw JSON files partitioned by event_date and event_hour.
+          Defined manually in snowflake/setup.sql (not managed by Terraform due to provider bug
+          with AUTO_REFRESH = TRUE). Refreshed automatically via SQS notifications from S3.
+        columns:
+          - name: event_date
+            description: "Date of the GitHub event, parsed from the S3 key partition (event_date=YYYY-MM-DD)."
+          - name: event_hour
+            description: "Hour of the GitHub event (0–23), parsed from the S3 key partition (event_hour=H)."
+          - name: raw_event
+            description: "Full GitHub Archive event payload as a VARIANT (JSON) column."

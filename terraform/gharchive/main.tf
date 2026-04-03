@@ -69,12 +69,6 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   source_arn    = aws_cloudwatch_event_rule.gharchive_hourly.arn
 }
 
-# ── SQS ───────────────────────────────────────────────────────────────────────
-
-module "sqs" {
-  source = "./modules/sqs"
-}
-
 # ── Snowflake IAM role ────────────────────────────────────────────────────────
 # This role is assumed by the Snowflake storage integration to read from S3.
 #
@@ -154,60 +148,20 @@ module "snowflake" {
 # Lives here (not in the SQS module) so it can reference both module outputs
 # without creating a circular dependency.
 
-resource "aws_sqs_queue_policy" "gharchive_events" {
-  queue_url = module.sqs.queue_url
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "AllowS3Publish"
-        Effect = "Allow"
-        Principal = {
-          Service = "s3.amazonaws.com"
-        }
-        Action   = "sqs:SendMessage"
-        Resource = module.sqs.queue_arn
-        Condition = {
-          ArnLike = {
-            "aws:SourceArn" = data.aws_s3_bucket.main.arn
-          }
-        }
-      },
-      {
-        Sid    = "AllowSnowflakeConsume"
-        Effect = "Allow"
-        Principal = {
-          AWS = module.snowflake.storage_aws_iam_user_arn
-        }
-        Action = [
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ReceiveMessage"
-        ]
-        Resource = module.sqs.queue_arn
-      }
-    ]
-  })
-}
-
 # ── S3 event notification ─────────────────────────────────────────────────────
 # aws_s3_bucket_notification is a singleton per bucket — only one resource
 # can manage all notification targets. This replaces any manually configured
 # notifications on the bucket.
 #
-# Sends object-created events for .json.gz files under raw/gharchive/ to the
-# customer-managed SQS queue above. Snowflake's AUTO_REFRESH also needs S3
-# events: after apply, retrieve module.snowflake.notification_channel (the
-# Snowflake-managed SQS ARN) and add a second queue block here, then re-apply.
+# Routes object-created events for .json.gz files under raw/gharchive/ directly
+# to Snowflake's managed SQS queue for AUTO_REFRESH.
 
 resource "aws_s3_bucket_notification" "gharchive_events" {
-  bucket     = data.aws_s3_bucket.main.id
-  depends_on = [aws_sqs_queue_policy.gharchive_events]
+  bucket = data.aws_s3_bucket.main.id
 
   queue {
-    id            = "gharchive-to-customer-sqs"
-    queue_arn     = module.sqs.queue_arn
+    id            = "gharchive-to-snowflake-sqs"
+    queue_arn     = var.snowflake_notification_channel_arn
     events        = ["s3:ObjectCreated:*"]
     filter_prefix = "raw/gharchive/"
     filter_suffix = ".json.gz"

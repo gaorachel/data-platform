@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: stg_gharchive__events
+    description: >
+      Staged GitHub Archive events. Extracts and renames columns from the RAW_EVENT
+      VARIANT column in the GHARCHIVE_EVENTS external table. No transformations —
+      classification logic lives in the intermediate layer.
+    columns:
+      - name: event_date
+        description: "Date of the GitHub event (partition key from S3 path)."
+        tests:
+          - not_null
+
+      - name: event_hour
+        description: "Hour of the GitHub event, 0–23 (partition key from S3 path)."
+        tests:
+          - not_null
+
+      - name: event_id
+        description: "GitHub event ID."
+        tests:
+          - not_null
+
+      - name: event_type
+        description: "GitHub event type (e.g. PushEvent, PullRequestEvent, IssuesEvent)."
+        tests:
+          - not_null
+
+      - name: actor_login
+        description: "GitHub login (username) of the actor who triggered the event."
+
+      - name: actor_type
+        description: "Actor type from the event payload (e.g. 'User', 'Bot')."
+
+      - name: repo_name
+        description: "Repository name in owner/repo format."
+
+      - name: created_at
+        description: "Timestamp when the event was created, from the event payload."
