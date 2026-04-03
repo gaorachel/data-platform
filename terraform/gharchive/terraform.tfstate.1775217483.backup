@@ -1,0 +1,1045 @@
+{
+  "version": 4,
+  "terraform_version": "1.5.7",
+  "serial": 56,
+  "lineage": "034d6910-e4a4-3e86-5659-162cf5d3e77a",
+  "outputs": {
+    "eventbridge_rule_name": {
+      "value": "gharchive-hourly-trigger",
+      "type": "string"
+    },
+    "lambda_function_arn": {
+      "value": "arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion",
+      "type": "string"
+    },
+    "lambda_function_name": {
+      "value": "gharchive-ingestion",
+      "type": "string"
+    },
+    "snowflake_storage_integration_external_id": {
+      "value": "EG10662_SFCRole=2_5h1m166p8Ghvav3F4qGKG0cNz0w=",
+      "type": "string"
+    },
+    "snowflake_storage_integration_iam_user_arn": {
+      "value": "arn:aws:iam::779060063003:user/l5mh1000-s",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "data",
+      "type": "aws_caller_identity",
+      "name": "current",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "account_id": "074308311757",
+            "arn": "arn:aws:iam::074308311757:user/data-platform-admin",
+            "id": "074308311757",
+            "user_id": "AIDARCTI63LGZZTH3Z53E"
+          },
+          "sensitive_attributes": []
+        }
+      ]
+    },
+    {
+      "mode": "data",
+      "type": "aws_s3_bucket",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:s3:::data-platform-main-074308311757",
+            "bucket": "data-platform-main-074308311757",
+            "bucket_domain_name": "data-platform-main-074308311757.s3.amazonaws.com",
+            "bucket_regional_domain_name": "data-platform-main-074308311757.s3.eu-west-1.amazonaws.com",
+            "hosted_zone_id": "Z1BKCTXD74EZPE",
+            "id": "data-platform-main-074308311757",
+            "region": "eu-west-1",
+            "website_domain": null,
+            "website_endpoint": null
+          },
+          "sensitive_attributes": []
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_event_rule",
+      "name": "gharchive_hourly",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:events:eu-west-1:074308311757:rule/gharchive-hourly-trigger",
+            "description": "Triggers the gharchive ingestion Lambda at 5 past every hour",
+            "event_bus_name": "default",
+            "event_pattern": null,
+            "force_destroy": false,
+            "id": "gharchive-hourly-trigger",
+            "is_enabled": true,
+            "name": "gharchive-hourly-trigger",
+            "name_prefix": "",
+            "role_arn": "",
+            "schedule_expression": "cron(5 * * * ? *)",
+            "state": "ENABLED",
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_cloudwatch_event_target",
+      "name": "gharchive_lambda",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "appsync_target": [],
+            "arn": "arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion",
+            "batch_target": [],
+            "dead_letter_config": [],
+            "ecs_target": [],
+            "event_bus_name": "default",
+            "force_destroy": false,
+            "http_target": [],
+            "id": "gharchive-hourly-trigger-gharchive-lambda",
+            "input": "",
+            "input_path": "",
+            "input_transformer": [],
+            "kinesis_target": [],
+            "redshift_target": [],
+            "retry_policy": [],
+            "role_arn": "",
+            "rule": "gharchive-hourly-trigger",
+            "run_command_targets": [],
+            "sagemaker_pipeline_target": [],
+            "sqs_target": [],
+            "target_id": "gharchive-lambda"
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "aws_cloudwatch_event_rule.gharchive_hourly",
+            "data.aws_s3_bucket.main",
+            "module.lambda.aws_cloudwatch_log_group.lambda",
+            "module.lambda.aws_iam_role.lambda_exec",
+            "module.lambda.aws_lambda_function.gharchive"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "snowflake_integration",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::074308311757:role/gharchive-snowflake-integration",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Condition\":{\"StringEquals\":{\"sts:ExternalId\":\"EG10662_SFCRole=2_5h1m166p8Ghvav3F4qGKG0cNz0w=\"}},\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::779060063003:user/l5mh1000-s\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-03-31T20:45:05Z",
+            "description": "Assumed by Snowflake storage integration to read gharchive data from S3",
+            "force_detach_policies": false,
+            "id": "gharchive-snowflake-integration",
+            "inline_policy": [
+              {
+                "name": "snowflake-s3-read",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:GetObjectVersion\",\"s3:ListBucket\",\"s3:GetBucketLocation\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::data-platform-main-074308311757\",\"arn:aws:s3:::data-platform-main-074308311757/raw/gharchive/*\"]}]}"
+              }
+            ],
+            "managed_policy_arns": [],
+            "max_session_duration": 3600,
+            "name": "gharchive-snowflake-integration",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROARCTI63LG72IV3J4T2"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA=="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "snowflake_s3_read",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "gharchive-snowflake-integration:snowflake-s3-read",
+            "name": "snowflake-s3-read",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":[\"s3:GetObject\",\"s3:GetObjectVersion\",\"s3:ListBucket\",\"s3:GetBucketLocation\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:s3:::data-platform-main-074308311757\",\"arn:aws:s3:::data-platform-main-074308311757/raw/gharchive/*\"]}]}",
+            "role": "gharchive-snowflake-integration"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_iam_role.snowflake_integration",
+            "data.aws_s3_bucket.main"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_lambda_permission",
+      "name": "allow_eventbridge",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "action": "lambda:InvokeFunction",
+            "event_source_token": null,
+            "function_name": "gharchive-ingestion",
+            "function_url_auth_type": null,
+            "id": "AllowEventBridgeInvoke",
+            "principal": "events.amazonaws.com",
+            "principal_org_id": null,
+            "qualifier": "",
+            "source_account": null,
+            "source_arn": "arn:aws:events:eu-west-1:074308311757:rule/gharchive-hourly-trigger",
+            "statement_id": "AllowEventBridgeInvoke",
+            "statement_id_prefix": ""
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ==",
+          "dependencies": [
+            "aws_cloudwatch_event_rule.gharchive_hourly",
+            "data.aws_s3_bucket.main",
+            "module.lambda.aws_cloudwatch_log_group.lambda",
+            "module.lambda.aws_iam_role.lambda_exec",
+            "module.lambda.aws_lambda_function.gharchive"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_s3_bucket_notification",
+      "name": "gharchive_events",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "bucket": "data-platform-main-074308311757",
+            "eventbridge": false,
+            "id": "data-platform-main-074308311757",
+            "lambda_function": [],
+            "queue": [
+              {
+                "events": [
+                  "s3:ObjectCreated:*"
+                ],
+                "filter_prefix": "raw/gharchive/",
+                "filter_suffix": ".json.gz",
+                "id": "gharchive-to-customer-sqs",
+                "queue_arn": "arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events"
+              },
+              {
+                "events": [
+                  "s3:ObjectCreated:*"
+                ],
+                "filter_prefix": "raw/gharchive/",
+                "filter_suffix": ".json.gz",
+                "id": "gharchive-to-snowflake-sqs",
+                "queue_arn": "arn:aws:sqs:eu-west-1:779060063003:sf-snowpipe-AIDA3KY4ZFMNW3IYDWVZW-Zq76jGychIj-y-4kbop3mw"
+              }
+            ],
+            "topic": []
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_sqs_queue_policy.gharchive_events",
+            "data.aws_s3_bucket.main",
+            "module.sqs.aws_sqs_queue.gharchive_events"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_sqs_queue_policy",
+      "name": "gharchive_events",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "id": "https://sqs.eu-west-1.amazonaws.com/074308311757/gharchive-s3-events",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::data-platform-main-074308311757\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events\",\"Sid\":\"AllowS3Publish\"},{\"Action\":[\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\",\"sqs:ReceiveMessage\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::779060063003:user/l5mh1000-s\"},\"Resource\":\"arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events\",\"Sid\":\"AllowSnowflakeConsume\"}],\"Version\":\"2012-10-17\"}",
+            "queue_url": "https://sqs.eu-west-1.amazonaws.com/074308311757/gharchive-s3-events"
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ==",
+          "dependencies": [
+            "aws_iam_role.snowflake_integration",
+            "data.aws_s3_bucket.main",
+            "module.snowflake.snowflake_storage_integration.s3",
+            "module.sqs.aws_sqs_queue.gharchive_events"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.lambda",
+      "mode": "managed",
+      "type": "aws_cloudwatch_log_group",
+      "name": "lambda",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:logs:eu-west-1:074308311757:log-group:/aws/lambda/gharchive-ingestion",
+            "id": "/aws/lambda/gharchive-ingestion",
+            "kms_key_id": "",
+            "log_group_class": "STANDARD",
+            "name": "/aws/lambda/gharchive-ingestion",
+            "name_prefix": "",
+            "retention_in_days": 14,
+            "skip_destroy": false,
+            "tags": {},
+            "tags_all": {}
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "module": "module.lambda",
+      "mode": "managed",
+      "type": "aws_iam_role",
+      "name": "lambda_exec",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:iam::074308311757:role/gharchive-ingestion-exec-role",
+            "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRole\",\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"lambda.amazonaws.com\"}}],\"Version\":\"2012-10-17\"}",
+            "create_date": "2026-03-30T22:19:41Z",
+            "description": "",
+            "force_detach_policies": false,
+            "id": "gharchive-ingestion-exec-role",
+            "inline_policy": [
+              {
+                "name": "gharchive-ingestion-s3-put",
+                "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"s3:PutObject\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::data-platform-main-074308311757/raw/gharchive/*\"}]}"
+              }
+            ],
+            "managed_policy_arns": [
+              "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+            ],
+            "max_session_duration": 3600,
+            "name": "gharchive-ingestion-exec-role",
+            "name_prefix": "",
+            "path": "/",
+            "permissions_boundary": "",
+            "tags": {},
+            "tags_all": {},
+            "unique_id": "AROARCTI63LGS4GI3ZF32"
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    },
+    {
+      "module": "module.lambda",
+      "mode": "managed",
+      "type": "aws_iam_role_policy",
+      "name": "s3_put",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "gharchive-ingestion-exec-role:gharchive-ingestion-s3-put",
+            "name": "gharchive-ingestion-s3-put",
+            "name_prefix": "",
+            "policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"s3:PutObject\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:s3:::data-platform-main-074308311757/raw/gharchive/*\"}]}",
+            "role": "gharchive-ingestion-exec-role"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_s3_bucket.main",
+            "module.lambda.aws_iam_role.lambda_exec"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.lambda",
+      "mode": "managed",
+      "type": "aws_iam_role_policy_attachment",
+      "name": "basic_execution",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "gharchive-ingestion-exec-role-20260331205530177200000001",
+            "policy_arn": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+            "role": "gharchive-ingestion-exec-role"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "module.lambda.aws_iam_role.lambda_exec"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.lambda",
+      "mode": "managed",
+      "type": "aws_lambda_function",
+      "name": "gharchive",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "architectures": [
+              "x86_64"
+            ],
+            "arn": "arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion",
+            "code_sha256": "V5kQpt2cqgyLYBlmlgT2JH/qsNvor7F04J/IQlraEcY=",
+            "code_signing_config_arn": "",
+            "dead_letter_config": [],
+            "description": "",
+            "environment": [
+              {
+                "variables": {
+                  "S3_BUCKET": "data-platform-main-074308311757"
+                }
+              }
+            ],
+            "ephemeral_storage": [
+              {
+                "size": 512
+              }
+            ],
+            "file_system_config": [],
+            "filename": "../../ingestion/gharchive/lambda.zip",
+            "function_name": "gharchive-ingestion",
+            "handler": "handler.lambda_handler",
+            "id": "gharchive-ingestion",
+            "image_config": [],
+            "image_uri": "",
+            "invoke_arn": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion/invocations",
+            "kms_key_arn": "",
+            "last_modified": "2026-04-03T11:51:47.000+0000",
+            "layers": [],
+            "logging_config": [
+              {
+                "application_log_level": "",
+                "log_format": "Text",
+                "log_group": "/aws/lambda/gharchive-ingestion",
+                "system_log_level": ""
+              }
+            ],
+            "memory_size": 512,
+            "package_type": "Zip",
+            "publish": false,
+            "qualified_arn": "arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion:$LATEST",
+            "qualified_invoke_arn": "arn:aws:apigateway:eu-west-1:lambda:path/2015-03-31/functions/arn:aws:lambda:eu-west-1:074308311757:function:gharchive-ingestion:$LATEST/invocations",
+            "replace_security_groups_on_destroy": null,
+            "replacement_security_group_ids": null,
+            "reserved_concurrent_executions": -1,
+            "role": "arn:aws:iam::074308311757:role/gharchive-ingestion-exec-role",
+            "runtime": "python3.12",
+            "s3_bucket": null,
+            "s3_key": null,
+            "s3_object_version": null,
+            "signing_job_arn": "",
+            "signing_profile_version_arn": "",
+            "skip_destroy": false,
+            "snap_start": [],
+            "source_code_hash": "V5kQpt2cqgyLYBlmlgT2JH/qsNvor7F04J/IQlraEcY=",
+            "source_code_size": 759570,
+            "tags": {},
+            "tags_all": {},
+            "timeout": 300,
+            "timeouts": null,
+            "tracing_config": [
+              {
+                "mode": "PassThrough"
+              }
+            ],
+            "version": "$LATEST",
+            "vpc_config": []
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6NjAwMDAwMDAwMDAwLCJ1cGRhdGUiOjYwMDAwMDAwMDAwMH19",
+          "dependencies": [
+            "data.aws_s3_bucket.main",
+            "module.lambda.aws_cloudwatch_log_group.lambda",
+            "module.lambda.aws_iam_role.lambda_exec"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.s3",
+      "mode": "managed",
+      "type": "aws_s3_bucket_lifecycle_configuration",
+      "name": "gharchive",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "bucket": "data-platform-main-074308311757",
+            "expected_bucket_owner": "",
+            "id": "data-platform-main-074308311757",
+            "rule": [
+              {
+                "abort_incomplete_multipart_upload": [],
+                "expiration": [],
+                "filter": [
+                  {
+                    "and": [],
+                    "object_size_greater_than": null,
+                    "object_size_less_than": null,
+                    "prefix": "raw/gharchive/",
+                    "tag": []
+                  }
+                ],
+                "id": "gharchive-raw-tiering",
+                "noncurrent_version_expiration": [],
+                "noncurrent_version_transition": [],
+                "prefix": "",
+                "status": "Enabled",
+                "transition": [
+                  {
+                    "date": null,
+                    "days": 30,
+                    "storage_class": "STANDARD_IA"
+                  },
+                  {
+                    "date": null,
+                    "days": 90,
+                    "storage_class": "GLACIER"
+                  }
+                ]
+              }
+            ],
+            "timeouts": null,
+            "transition_default_minimum_object_size": "all_storage_classes_128K"
+          },
+          "sensitive_attributes": [],
+          "dependencies": [
+            "data.aws_s3_bucket.main"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.snowflake",
+      "mode": "managed",
+      "type": "snowflake_database",
+      "name": "data_platform",
+      "provider": "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "catalog": "",
+            "comment": "",
+            "data_retention_time_in_days": 1,
+            "default_ddl_collation": "",
+            "drop_public_schema_on_creation": null,
+            "enable_console_output": false,
+            "external_volume": "",
+            "fully_qualified_name": "\"DATA_PLATFORM\"",
+            "id": "DATA_PLATFORM",
+            "is_transient": false,
+            "log_level": "OFF",
+            "max_data_extension_time_in_days": 14,
+            "name": "DATA_PLATFORM",
+            "quoted_identifiers_ignore_case": false,
+            "replace_invalid_characters": false,
+            "replication": [],
+            "storage_serialization_policy": "OPTIMIZED",
+            "suspend_task_after_num_failures": 10,
+            "task_auto_retry_attempts": 0,
+            "trace_level": "OFF",
+            "user_task_managed_initial_warehouse_size": "Medium",
+            "user_task_minimum_trigger_interval_in_seconds": 30,
+            "user_task_timeout_ms": 3600000
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ=="
+        }
+      ]
+    },
+    {
+      "module": "module.snowflake",
+      "mode": "managed",
+      "type": "snowflake_schema",
+      "name": "gharchive",
+      "provider": "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]",
+      "instances": [
+        {
+          "schema_version": 2,
+          "attributes": {
+            "catalog": "",
+            "comment": "",
+            "data_retention_time_in_days": 1,
+            "database": "DATA_PLATFORM",
+            "default_ddl_collation": "",
+            "describe_output": [
+              {
+                "created_on": "2026-03-31 15:04:48.677 -0700 PDT",
+                "kind": "EXTERNAL_TABLE",
+                "name": "GHARCHIVE_EVENTS"
+              }
+            ],
+            "enable_console_output": false,
+            "external_volume": "",
+            "fully_qualified_name": "\"DATA_PLATFORM\".\"GHARCHIVE\"",
+            "id": "\"DATA_PLATFORM\".\"GHARCHIVE\"",
+            "is_transient": "default",
+            "log_level": "OFF",
+            "max_data_extension_time_in_days": 14,
+            "name": "GHARCHIVE",
+            "parameters": [
+              {
+                "catalog": [
+                  {
+                    "default": "",
+                    "description": "Name of the catalog integration to use for iceberg tables",
+                    "key": "CATALOG",
+                    "level": "",
+                    "value": ""
+                  }
+                ],
+                "data_retention_time_in_days": [
+                  {
+                    "default": "1",
+                    "description": "number of days to retain the old version of deleted/updated data",
+                    "key": "DATA_RETENTION_TIME_IN_DAYS",
+                    "level": "",
+                    "value": "1"
+                  }
+                ],
+                "default_ddl_collation": [
+                  {
+                    "default": "",
+                    "description": "Collation that is used for all the new columns created by the DDL statements (if not specified)",
+                    "key": "DEFAULT_DDL_COLLATION",
+                    "level": "",
+                    "value": ""
+                  }
+                ],
+                "enable_console_output": [
+                  {
+                    "default": "false",
+                    "description": "Enable stdout/stderr fast path logging for anonyous stored procs. This is a public parameter (similar to LOG_LEVEL).",
+                    "key": "ENABLE_CONSOLE_OUTPUT",
+                    "level": "",
+                    "value": "false"
+                  }
+                ],
+                "external_volume": [
+                  {
+                    "default": "",
+                    "description": "Name of an external volume that will be used for persisted Iceberg metadata and data files.",
+                    "key": "EXTERNAL_VOLUME",
+                    "level": "",
+                    "value": ""
+                  }
+                ],
+                "log_level": [
+                  {
+                    "default": "OFF",
+                    "description": "LOG_LEVEL to use when filtering events",
+                    "key": "LOG_LEVEL",
+                    "level": "",
+                    "value": "OFF"
+                  }
+                ],
+                "max_data_extension_time_in_days": [
+                  {
+                    "default": "14",
+                    "description": "Maximum number of days to extend data retention beyond the retention period to prevent a stream becoming stale.",
+                    "key": "MAX_DATA_EXTENSION_TIME_IN_DAYS",
+                    "level": "",
+                    "value": "14"
+                  }
+                ],
+                "pipe_execution_paused": [
+                  {
+                    "default": "false",
+                    "description": "Pause processing of files for a pipe",
+                    "key": "PIPE_EXECUTION_PAUSED",
+                    "level": "",
+                    "value": "false"
+                  }
+                ],
+                "quoted_identifiers_ignore_case": [
+                  {
+                    "default": "false",
+                    "description": "If true, the case of quoted identifiers is ignored",
+                    "key": "QUOTED_IDENTIFIERS_IGNORE_CASE",
+                    "level": "",
+                    "value": "false"
+                  }
+                ],
+                "replace_invalid_characters": [
+                  {
+                    "default": "false",
+                    "description": "Replace invalid UTF-8 characters found in Iceberg table external data files with the Unicode replacement character",
+                    "key": "REPLACE_INVALID_CHARACTERS",
+                    "level": "",
+                    "value": "false"
+                  }
+                ],
+                "storage_serialization_policy": [
+                  {
+                    "default": "OPTIMIZED",
+                    "description": "Storage serialization policy used for managed Iceberg table. This include encodings and compressions",
+                    "key": "STORAGE_SERIALIZATION_POLICY",
+                    "level": "",
+                    "value": "OPTIMIZED"
+                  }
+                ],
+                "suspend_task_after_num_failures": [
+                  {
+                    "default": "10",
+                    "description": "How many times a task must fail in a row before it is automatically suspended. 0 disables auto-suspending.",
+                    "key": "SUSPEND_TASK_AFTER_NUM_FAILURES",
+                    "level": "",
+                    "value": "10"
+                  }
+                ],
+                "task_auto_retry_attempts": [
+                  {
+                    "default": "0",
+                    "description": "Maximum Automatic Retries Allowed For A User Task",
+                    "key": "TASK_AUTO_RETRY_ATTEMPTS",
+                    "level": "",
+                    "value": "0"
+                  }
+                ],
+                "trace_level": [
+                  {
+                    "default": "OFF",
+                    "description": "Trace level value to use when generating/filtering trace events",
+                    "key": "TRACE_LEVEL",
+                    "level": "",
+                    "value": "OFF"
+                  }
+                ],
+                "user_task_managed_initial_warehouse_size": [
+                  {
+                    "default": "Medium",
+                    "description": "The initial size of warehouse to use for managed warehouses in the absence of history",
+                    "key": "USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE",
+                    "level": "",
+                    "value": "Medium"
+                  }
+                ],
+                "user_task_minimum_trigger_interval_in_seconds": [
+                  {
+                    "default": "30",
+                    "description": "Minimum amount of time between Triggered Task executions in seconds",
+                    "key": "USER_TASK_MINIMUM_TRIGGER_INTERVAL_IN_SECONDS",
+                    "level": "",
+                    "value": "30"
+                  }
+                ],
+                "user_task_timeout_ms": [
+                  {
+                    "default": "3600000",
+                    "description": "User task execution timeout in milliseconds",
+                    "key": "USER_TASK_TIMEOUT_MS",
+                    "level": "",
+                    "value": "3600000"
+                  }
+                ]
+              }
+            ],
+            "pipe_execution_paused": false,
+            "quoted_identifiers_ignore_case": false,
+            "replace_invalid_characters": false,
+            "show_output": [
+              {
+                "comment": "",
+                "created_on": "2026-03-31 13:45:06 -0700 PDT",
+                "database_name": "DATA_PLATFORM",
+                "dropped_on": "0001-01-01 00:00:00 +0000 UTC",
+                "is_current": false,
+                "is_default": false,
+                "name": "GHARCHIVE",
+                "options": "",
+                "owner": "ACCOUNTADMIN",
+                "owner_role_type": "ROLE",
+                "retention_time": "1"
+              }
+            ],
+            "storage_serialization_policy": "OPTIMIZED",
+            "suspend_task_after_num_failures": 10,
+            "task_auto_retry_attempts": 0,
+            "trace_level": "OFF",
+            "user_task_managed_initial_warehouse_size": "Medium",
+            "user_task_minimum_trigger_interval_in_seconds": 30,
+            "user_task_timeout_ms": 3600000,
+            "with_managed_access": "default"
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjIifQ==",
+          "dependencies": [
+            "module.snowflake.snowflake_database.data_platform"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.snowflake",
+      "mode": "managed",
+      "type": "snowflake_stage",
+      "name": "gharchive",
+      "provider": "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "aws_external_id": "EG10662_SFCRole=2_5h1m166p8Ghvav3F4qGKG0cNz0w=",
+            "comment": "",
+            "copy_options": "",
+            "credentials": null,
+            "database": "DATA_PLATFORM",
+            "directory": "",
+            "encryption": null,
+            "file_format": "",
+            "fully_qualified_name": "\"DATA_PLATFORM\".\"GHARCHIVE\".\"GHARCHIVE_S3_STAGE\"",
+            "id": "DATA_PLATFORM|GHARCHIVE|GHARCHIVE_S3_STAGE",
+            "name": "GHARCHIVE_S3_STAGE",
+            "schema": "GHARCHIVE",
+            "snowflake_iam_user": "arn:aws:iam::779060063003:user/l5mh1000-s",
+            "storage_integration": "GHARCHIVE_S3_INTEGRATION",
+            "tag": [],
+            "url": "s3://data-platform-main-074308311757/raw/gharchive/"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_iam_role.snowflake_integration",
+            "data.aws_s3_bucket.main",
+            "module.snowflake.snowflake_database.data_platform",
+            "module.snowflake.snowflake_schema.gharchive",
+            "module.snowflake.snowflake_storage_integration.s3"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.snowflake",
+      "mode": "managed",
+      "type": "snowflake_storage_integration",
+      "name": "s3",
+      "provider": "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "azure_consent_url": null,
+            "azure_multi_tenant_app_name": null,
+            "azure_tenant_id": null,
+            "comment": "",
+            "created_on": "2026-03-31 13:55:29.831 -0700 PDT",
+            "enabled": true,
+            "fully_qualified_name": "\"GHARCHIVE_S3_INTEGRATION\"",
+            "id": "GHARCHIVE_S3_INTEGRATION",
+            "name": "GHARCHIVE_S3_INTEGRATION",
+            "storage_allowed_locations": [
+              "s3://data-platform-main-074308311757/raw/gharchive/"
+            ],
+            "storage_aws_external_id": "EG10662_SFCRole=2_5h1m166p8Ghvav3F4qGKG0cNz0w=",
+            "storage_aws_iam_user_arn": "arn:aws:iam::779060063003:user/l5mh1000-s",
+            "storage_aws_object_acl": null,
+            "storage_aws_role_arn": "arn:aws:iam::074308311757:role/gharchive-snowflake-integration",
+            "storage_blocked_locations": null,
+            "storage_gcp_service_account": null,
+            "storage_provider": "S3",
+            "type": "EXTERNAL_STAGE"
+          },
+          "sensitive_attributes": [],
+          "private": "bnVsbA==",
+          "dependencies": [
+            "aws_iam_role.snowflake_integration",
+            "data.aws_s3_bucket.main"
+          ]
+        }
+      ]
+    },
+    {
+      "module": "module.snowflake",
+      "mode": "managed",
+      "type": "snowflake_warehouse",
+      "name": "compute_wh",
+      "provider": "provider[\"registry.terraform.io/snowflake-labs/snowflake\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "auto_resume": "true",
+            "auto_suspend": 60,
+            "comment": "",
+            "enable_query_acceleration": "default",
+            "fully_qualified_name": "\"COMPUTE_WH\"",
+            "id": "COMPUTE_WH",
+            "initially_suspended": null,
+            "max_cluster_count": 0,
+            "max_concurrency_level": 8,
+            "min_cluster_count": 0,
+            "name": "COMPUTE_WH",
+            "parameters": [
+              {
+                "max_concurrency_level": [
+                  {
+                    "default": "8",
+                    "description": "Maximum number of SQL statements a warehouse cluster can execute concurrently before queuing them. Small SQL statements count as a fraction of 1.",
+                    "key": "MAX_CONCURRENCY_LEVEL",
+                    "level": "",
+                    "value": "8"
+                  }
+                ],
+                "statement_queued_timeout_in_seconds": [
+                  {
+                    "default": "0",
+                    "description": "Timeout in seconds for queued statements: statements will automatically be canceled if they are queued on a warehouse for longer than this amount of time; disabled if set to zero.",
+                    "key": "STATEMENT_QUEUED_TIMEOUT_IN_SECONDS",
+                    "level": "",
+                    "value": "0"
+                  }
+                ],
+                "statement_timeout_in_seconds": [
+                  {
+                    "default": "172800",
+                    "description": "Timeout in seconds for statements: statements are automatically canceled if they run for longer; if set to zero, max value (604800) is enforced.",
+                    "key": "STATEMENT_TIMEOUT_IN_SECONDS",
+                    "level": "",
+                    "value": "172800"
+                  }
+                ]
+              }
+            ],
+            "query_acceleration_max_scale_factor": -1,
+            "resource_monitor": "",
+            "scaling_policy": "",
+            "show_output": [
+              {
+                "auto_resume": true,
+                "auto_suspend": 60,
+                "available": 0,
+                "comment": "",
+                "created_on": "2026-03-31 12:09:39.101 -0700 PDT",
+                "enable_query_acceleration": false,
+                "is_current": true,
+                "is_default": true,
+                "max_cluster_count": 1,
+                "min_cluster_count": 1,
+                "name": "COMPUTE_WH",
+                "other": 0,
+                "owner": "ACCOUNTADMIN",
+                "owner_role_type": "ROLE",
+                "provisioning": 0,
+                "query_acceleration_max_scale_factor": 8,
+                "queued": 0,
+                "quiescing": 0,
+                "resource_monitor": "",
+                "resumed_on": "2026-04-03 04:46:20.835 -0700 PDT",
+                "running": 0,
+                "scaling_policy": "STANDARD",
+                "size": "XSMALL",
+                "started_clusters": 0,
+                "state": "SUSPENDED",
+                "type": "STANDARD",
+                "updated_on": "2026-04-03 04:46:20.835 -0700 PDT"
+              }
+            ],
+            "statement_queued_timeout_in_seconds": 0,
+            "statement_timeout_in_seconds": 172800,
+            "warehouse_size": "XSMALL",
+            "warehouse_type": ""
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjEifQ=="
+        }
+      ]
+    },
+    {
+      "module": "module.sqs",
+      "mode": "managed",
+      "type": "aws_sqs_queue",
+      "name": "gharchive_events",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events",
+            "content_based_deduplication": false,
+            "deduplication_scope": "",
+            "delay_seconds": 0,
+            "fifo_queue": false,
+            "fifo_throughput_limit": "",
+            "id": "https://sqs.eu-west-1.amazonaws.com/074308311757/gharchive-s3-events",
+            "kms_data_key_reuse_period_seconds": 300,
+            "kms_master_key_id": "",
+            "max_message_size": 262144,
+            "message_retention_seconds": 86400,
+            "name": "gharchive-s3-events",
+            "name_prefix": "",
+            "policy": "{\"Statement\":[{\"Action\":\"sqs:SendMessage\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::data-platform-main-074308311757\"}},\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Resource\":\"arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events\",\"Sid\":\"AllowS3Publish\"},{\"Action\":[\"sqs:DeleteMessage\",\"sqs:GetQueueAttributes\",\"sqs:ReceiveMessage\"],\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"arn:aws:iam::779060063003:user/l5mh1000-s\"},\"Resource\":\"arn:aws:sqs:eu-west-1:074308311757:gharchive-s3-events\",\"Sid\":\"AllowSnowflakeConsume\"}],\"Version\":\"2012-10-17\"}",
+            "receive_wait_time_seconds": 0,
+            "redrive_allow_policy": "",
+            "redrive_policy": "",
+            "sqs_managed_sse_enabled": true,
+            "tags": {
+              "Project": "gharchive",
+              "Purpose": "Buffer S3 event notifications for Snowflake AUTO_REFRESH"
+            },
+            "tags_all": {
+              "Project": "gharchive",
+              "Purpose": "Buffer S3 event notifications for Snowflake AUTO_REFRESH"
+            },
+            "timeouts": null,
+            "url": "https://sqs.eu-west-1.amazonaws.com/074308311757/gharchive-s3-events",
+            "visibility_timeout_seconds": 30
+          },
+          "sensitive_attributes": [],
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjoxODAwMDAwMDAwMDAsImRlbGV0ZSI6MTgwMDAwMDAwMDAwLCJ1cGRhdGUiOjE4MDAwMDAwMDAwMH19"
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

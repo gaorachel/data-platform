@@ -43,3 +43,9 @@ variable "snowflake_role" {
   type        = string
   default     = "ACCOUNTADMIN"
 }
+
+variable "snowflake_notification_channel_arn" {
+  description = "ARN of the Snowflake-managed SQS queue for AUTO_REFRESH event notifications. Retrieved from SHOW EXTERNAL TABLES or Snowflake stage properties."
+  type        = string
+  default     = "arn:aws:sqs:eu-west-1:779060063003:sf-snowpipe-AIDA3KY4ZFMNW3IYDWVZW-Zq76jGychIj-y-4kbop3mw"
+}
