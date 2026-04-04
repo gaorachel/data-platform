@@ -1,0 +1,230 @@
+chartConfig:
+  config:
+    conditionalFormattings: []
+    eChartsConfig:
+      legend:
+        show: true
+      series:
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: unknown
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: C#
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Jupyter Notebook
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: TypeScript
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: HTML
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Shell
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: PowerShell
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Go
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Hack
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Python
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: Ruby
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: SCSS
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: JavaScript
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: PHP
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+        - encode:
+            xRef:
+              field: mart_language_activity_event_date_day
+            yRef:
+              field: mart_language_activity_total_events
+              pivotValues:
+                - field: mart_language_activity_language
+                  value: R
+          isFilteredOut: false
+          stack: mart_language_activity_total_events
+          type: bar
+          yAxisIndex: 0
+      showAxisTicks: false
+      tooltipSort: value_descending
+    layout:
+      stack: stack
+      xField: mart_language_activity_event_date_day
+      yField:
+        - mart_language_activity_total_events
+  type: cartesian
+contentType: chart
+description: >-
+  Daily push-event count over time, broken out by programming language. Filter
+  to the languages of interest using the language dimension filter.
+metricQuery:
+  additionalMetrics: []
+  customDimensions: []
+  dimensionOverrides: {}
+  dimensions:
+    - mart_language_activity_event_date_day
+    - mart_language_activity_language
+  exploreName: mart_language_activity
+  filters: {}
+  limit: 500
+  metricOverrides: {}
+  metrics:
+    - mart_language_activity_total_events
+  sorts:
+    - descending: true
+      fieldId: mart_language_activity_event_date_day
+  tableCalculations: []
+name: Event Count Over Time for Top Languages
+pivotConfig:
+  columns:
+    - mart_language_activity_language
+slug: event-count-over-time-for-top-languages
+spaceSlug: github-analyses
+tableConfig:
+  columnOrder:
+    - mart_language_activity_event_date_day
+    - mart_language_activity_language
+    - mart_language_activity_total_events
+tableName: mart_language_activity
+verification: null
+version: 1

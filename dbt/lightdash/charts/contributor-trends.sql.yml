@@ -1,0 +1,30 @@
+chartKind: line
+config:
+  display: {}
+  fieldConfig:
+    groupBy:
+      - reference: CONTRIBUTOR_TYPE
+    sortBy:
+      - direction: ASC
+        reference: EVENT_DATE
+    x:
+      reference: EVENT_DATE
+      type: time
+    "y":
+      - aggregation: sum
+        reference: EVENT_COUNT
+  metadata:
+    version: 1
+  type: line
+contentType: sql_chart
+description: |2-
+    Daily push-event contribution counts split by contributor type (human vs bot).
+    Based on mart_contributor_trends.
+limit: 500
+name: Contributor Trends
+slug: contributor-trends
+spaceSlug: github-analyses
+sql: |-
+  select *
+  from data_platform.gharchive.mart_contributor_trends
+version: 1
