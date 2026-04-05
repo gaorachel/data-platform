@@ -1,4 +1,4 @@
-name: dbt daily refresh
+name: gh-analysis dbt daily refresh
 
 on:
   schedule:
@@ -36,12 +36,12 @@ jobs:
                 role: "${{ secrets.SNOWFLAKE_ROLE }}"
                 database: "${{ secrets.SNOWFLAKE_DATABASE }}"
                 warehouse: "${{ secrets.SNOWFLAKE_WAREHOUSE }}"
-                schema: "${{ secrets.SNOWFLAKE_SCHEMA }}"
+                schema: "${{ secrets.SNOWFLAKE_GH_ANALYSIS_SCHEMA }}"
                 threads: 4
           EOF
 
       - name: dbt deps
         run: dbt deps
 
-      - name: dbt run
-        run: dbt run --select mart_contributor_trends
+      - name: dbt build
+        run: dbt build --select mart_contributor_trends

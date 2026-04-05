@@ -83,6 +83,14 @@ S3 event notifications point at Snowflake's managed SQS queue (`sf-snowpipe-...`
 - GitHub PAT: `data-platform/github/pat` in AWS Secrets Manager
 - Lambda reads at runtime via boto3 — never in environment variables or code
 - Snowflake credentials: `terraform/gharchive/snowflake.tfvars` (gitignored)
+- GitHub Actions secrets:
+  - `SNOWFLAKE_ACCOUNT` — org-account format e.g. `myorg-myaccount`
+  - `SNOWFLAKE_USER` — Snowflake username
+  - `SNOWFLAKE_SECRETS` — Snowflake password
+  - `SNOWFLAKE_ROLE` — Snowflake role
+  - `SNOWFLAKE_DATABASE` — Snowflake database
+  - `SNOWFLAKE_WAREHOUSE` — Snowflake warehouse
+  - `SNOWFLAKE_GH_ANALYSIS_SCHEMA` — schema for gh-analysis dbt models
 
 **Terraform**
 - `terraform/shared/` always applied first
@@ -95,7 +103,7 @@ S3 event notifications point at Snowflake's managed SQS queue (`sf-snowpipe-...`
 - Intermediate: view materialisation
 - Marts: incremental table, delete+insert, last 3 days incremental filter
 - All models include Lightdash meta tags
-- Dashboard YAML definitions in `dbt/dashboards/`
+- Dashboard YAML definitions in `dbt/lightdash/`
 - Do not change materialisation without asking
 
 **Snowflake connection**
