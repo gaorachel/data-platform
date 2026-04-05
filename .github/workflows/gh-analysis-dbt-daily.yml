@@ -33,10 +33,10 @@ jobs:
                 account: "${{ secrets.SNOWFLAKE_ACCOUNT }}"
                 user: "${{ secrets.SNOWFLAKE_USER }}"
                 password: "${{ secrets.SNOWFLAKE_PASSWORD }}"
-                role: "${{ secrets.SNOWFLAKE_ROLE }}"
-                database: "${{ secrets.SNOWFLAKE_DATABASE }}"
-                warehouse: "${{ secrets.SNOWFLAKE_WAREHOUSE }}"
-                schema: "${{ secrets.SNOWFLAKE_GH_ANALYSIS_SCHEMA }}"
+                role: ACCOUNTADMIN
+                database: DATA_PLATFORM
+                warehouse: COMPUTE_WH
+                schema: GHARCHIVE
                 threads: 4
           EOF
 
