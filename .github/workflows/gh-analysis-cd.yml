@@ -1,0 +1,30 @@
+name: gh-analysis CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lightdash-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Lightdash CLI
+        run: npm install -g @lightdash/cli
+
+      - name: lightdash deploy
+        env:
+          LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
+          LIGHTDASH_URL: https://app.lightdash.cloud
+          LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
+        run: lightdash deploy

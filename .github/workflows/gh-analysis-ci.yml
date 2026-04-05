@@ -1,0 +1,210 @@
+name: gh-analysis CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  dbt-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dbt
+        run: pip install dbt-core==1.11.7 dbt-snowflake==1.11.3
+
+      - name: Write profiles.yml
+        run: |
+          cat > profiles.yml <<EOF
+          data_platform:
+            target: prod
+            outputs:
+              prod:
+                type: snowflake
+                account: "${{ secrets.SNOWFLAKE_ACCOUNT }}"
+                user: "${{ secrets.SNOWFLAKE_USER }}"
+                password: "${{ secrets.SNOWFLAKE_PASSWORD }}"
+                role: ACCOUNTADMIN
+                database: DATA_PLATFORM
+                warehouse: COMPUTE_WH
+                schema: GHARCHIVE
+                threads: 4
+          EOF
+
+      - name: Restore dbt state cache
+        uses: actions/cache@v4
+        with:
+          path: dbt/target
+          key: dbt-state-${{ github.base_ref }}
+
+      - name: dbt deps
+        run: dbt deps
+
+      - name: dbt build
+        run: |
+          if [ -f "./target/manifest.json" ]; then
+            MODIFIED_COUNT=$(dbt ls --select state:modified+ --defer --state ./target 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$MODIFIED_COUNT" -gt "0" ]; then
+              dbt build --select state:modified+ --defer --state ./target
+            else
+              echo "No modified models detected, running: dbt build --select marts.gharchive"
+              dbt build --select marts.gharchive
+            fi
+          else
+            echo "No prior dbt state found, running: dbt build --select marts.gharchive"
+            dbt build --select marts.gharchive
+          fi
+
+  terraform-plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">= 1.5"
+
+      - name: Terraform init — shared
+        run: terraform init
+        working-directory: terraform/shared
+
+      - name: Terraform plan — shared
+        id: plan-shared
+        continue-on-error: true
+        run: terraform plan -no-color 2>&1 | tee /tmp/tf-plan-shared.txt
+        working-directory: terraform/shared
+
+      - name: Write Snowflake tfvars for CI
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+        run: |
+          python3 -c "
+          import os
+          acct = os.environ['SNOWFLAKE_ACCOUNT']
+          org, name = acct.split('-', 1)
+          user = os.environ['SNOWFLAKE_USER']
+          pwd  = os.environ['SNOWFLAKE_PASSWORD']
+          lines = [
+              f'snowflake_organization_name = \"{org}\"',
+              f'snowflake_account_name      = \"{name}\"',
+              f'snowflake_user              = \"{user}\"',
+              f'snowflake_password          = \"{pwd}\"',
+          ]
+          print('\n'.join(lines))
+          " > terraform/gharchive/snowflake_ci.tfvars
+
+      - name: Terraform init — gharchive
+        run: terraform init
+        working-directory: terraform/gharchive
+
+      - name: Terraform plan — gharchive
+        id: plan-gharchive
+        continue-on-error: true
+        run: |
+          terraform plan -no-color \
+            -var-file="snowflake_ci.tfvars" \
+            -var="s3_bucket_name=ci-placeholder" \
+            2>&1 | tee /tmp/tf-plan-gharchive.txt
+        working-directory: terraform/gharchive
+
+      - name: Post plan as PR comment
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            const read = (p) => { try { return fs.readFileSync(p, 'utf8'); } catch { return '(no output)'; } };
+            const truncate = (s, n) => s.length > n ? s.slice(0, n) + '\n... (truncated)' : s;
+            const planShared    = truncate(read('/tmp/tf-plan-shared.txt'),    20000);
+            const planGharchive = truncate(read('/tmp/tf-plan-gharchive.txt'), 20000);
+            const body = [
+              '## Terraform Plan',
+              '',
+              '### `terraform/shared`',
+              '```hcl',
+              planShared,
+              '```',
+              '',
+              '### `terraform/gharchive`',
+              '```hcl',
+              planGharchive,
+              '```',
+              '',
+              '> `s3_bucket_name` uses a CI placeholder — actual value comes from `terraform/shared` outputs at deploy time.',
+            ].join('\n');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });
+
+      - name: Assert plans passed
+        if: steps.plan-shared.outcome == 'failure' || steps.plan-gharchive.outcome == 'failure'
+        run: |
+          echo "One or more terraform plans failed — see PR comment for details."
+          exit 1
+
+  lambda-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build gharchive Lambda
+        run: make build
+
+      - name: Build github-repos Lambda
+        run: make build-repos
+
+      - name: Verify zip files exist
+        run: |
+          test -f ingestion/gharchive/lambda.zip \
+            || { echo "ERROR: ingestion/gharchive/lambda.zip not found"; exit 1; }
+          test -f ingestion/github-repos/lambda.zip \
+            || { echo "ERROR: ingestion/github-repos/lambda.zip not found"; exit 1; }
+          echo "Both zip files present:"
+          ls -lh ingestion/gharchive/lambda.zip ingestion/github-repos/lambda.zip
+
+  python-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint ingestion/
+        run: ruff check ingestion/

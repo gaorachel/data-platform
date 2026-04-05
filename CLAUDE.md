@@ -87,10 +87,9 @@ S3 event notifications point at Snowflake's managed SQS queue (`sf-snowpipe-...`
   - `SNOWFLAKE_ACCOUNT` — org-account format e.g. `myorg-myaccount`
   - `SNOWFLAKE_USER` — Snowflake username
   - `SNOWFLAKE_SECRETS` — Snowflake password
-  - `SNOWFLAKE_ROLE` — Snowflake role
-  - `SNOWFLAKE_DATABASE` — Snowflake database
-  - `SNOWFLAKE_WAREHOUSE` — Snowflake warehouse
-  - `SNOWFLAKE_GH_ANALYSIS_SCHEMA` — schema for gh-analysis dbt models
+  - `AWS_ACCESS_KEY_ID` — AWS access key ID for CI/CD (terraform plan, lambda build verification)
+  - `AWS_SECRET_ACCESS_KEY` — AWS secret access key for CI/CD
+  - `LIGHTDASH_API_KEY`
 
 **Terraform**
 - `terraform/shared/` always applied first
