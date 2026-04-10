@@ -1,7 +1,7 @@
 {{
     config(
         materialized='incremental',
-        unique_key="event_date || '-' || COALESCE(language, 'unknown') || '-' || contributor_type",
+        unique_key=["event_date", "language", "contributor_type"],
         incremental_strategy='delete+insert'
     )
 }}
@@ -30,5 +30,6 @@ SELECT
     COUNT(DISTINCT repo_name)  AS unique_repos
 
 FROM events
+WHERE event_date <= DATEADD(day, -1, CURRENT_DATE) -- ensure we only include complete days in the results
 
 GROUP BY event_date, language, contributor_type
