@@ -86,7 +86,7 @@ S3 event notifications point at Snowflake's managed SQS queue (`sf-snowpipe-...`
 - GitHub Actions secrets:
   - `SNOWFLAKE_ACCOUNT` — org-account format e.g. `myorg-myaccount`
   - `SNOWFLAKE_USER` — Snowflake username
-  - `SNOWFLAKE_SECRETS` — Snowflake password
+  - `SNOWFLAKE_PASSWORD` — Snowflake password
   - `AWS_ACCESS_KEY_ID` — AWS access key ID for CI/CD (terraform plan, lambda build verification)
   - `AWS_SECRET_ACCESS_KEY` — AWS secret access key for CI/CD
   - `LIGHTDASH_API_KEY`
