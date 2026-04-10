@@ -1,7 +1,7 @@
 {{
     config(
         materialized='incremental',
-        unique_key="event_date || '-' || contributor_type",
+        unique_key=["event_date", "contributor_type"],
         incremental_strategy='delete+insert'
     )
 }}
@@ -26,5 +26,6 @@ SELECT
     COUNT(DISTINCT actor_login) AS unique_contributors
 
 FROM events
+WHERE event_date <= DATEADD(day, -1, CURRENT_DATE) -- ensure we only include complete days in the results
 
 GROUP BY event_date, contributor_type
