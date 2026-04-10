@@ -19,6 +19,10 @@ jobs:
         with:
           node-version: '20'
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - name: Install dbt
         run: pip install dbt-core==1.11.7 dbt-snowflake==1.11.3
 
@@ -42,6 +46,9 @@ jobs:
                 schema: GHARCHIVE
                 threads: 4
           EOF
+
+      - name: dbt deps
+        run: dbt deps --profiles-dir .
 
       - name: lightdash deploy
         env:
