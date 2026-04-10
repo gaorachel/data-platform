@@ -56,7 +56,7 @@ jobs:
         run: dbt deps --profiles-dir .
 
       - name: lightdash login
-        run: lightdash login https://app.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
+        run: lightdash login https://eu1.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
 
       - name: lightdash deploy
         if: github.event_name == 'push'
@@ -83,7 +83,7 @@ jobs:
         run: npm install -g @lightdash/cli@0.2746.2
 
       - name: lightdash login
-        run: lightdash login https://app.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
+        run: lightdash login https://eu1.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
 
       - name: lightdash stop-preview
         env:
