@@ -55,19 +55,18 @@ jobs:
       - name: dbt deps
         run: dbt deps --profiles-dir .
 
+      - name: lightdash login
+        run: lightdash login https://app.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
+
       - name: lightdash deploy
         if: github.event_name == 'push'
         env:
-          LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
-          LIGHTDASH_URL: https://app.lightdash.cloud
           LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
         run: lightdash deploy --profiles-dir .
 
       - name: lightdash start-preview
         if: github.event_name == 'pull_request'
         env:
-          LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
-          LIGHTDASH_URL: https://app.lightdash.cloud
           LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
         run: lightdash start-preview --name "PR-${{ github.event.number }}" --profiles-dir .
 
@@ -83,9 +82,10 @@ jobs:
       - name: Install Lightdash CLI
         run: npm install -g @lightdash/cli@0.2746.2
 
+      - name: lightdash login
+        run: lightdash login https://app.lightdash.cloud --token "${{ secrets.LIGHTDASH_API_KEY }}"
+
       - name: lightdash stop-preview
         env:
-          LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
-          LIGHTDASH_URL: https://app.lightdash.cloud
           LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
         run: lightdash stop-preview --name "PR-${{ github.event.number }}"
