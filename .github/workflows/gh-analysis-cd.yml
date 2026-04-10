@@ -23,11 +23,29 @@ jobs:
         run: pip install dbt-core==1.11.7 dbt-snowflake==1.11.3
 
       - name: Install Lightdash CLI
-        run: npm install -g @lightdash/cli
+        run: npm install -g @lightdash/cli@0.2746.2
+
+      - name: Write profiles.yml
+        run: |
+          cat > profiles.yml <<EOF
+          data_platform:
+            target: prod
+            outputs:
+              prod:
+                type: snowflake
+                account: "${{ secrets.SNOWFLAKE_ACCOUNT }}"
+                user: "${{ secrets.SNOWFLAKE_USER }}"
+                password: "${{ secrets.SNOWFLAKE_PASSWORD }}"
+                role: ACCOUNTADMIN
+                database: DATA_PLATFORM
+                warehouse: COMPUTE_WH
+                schema: GHARCHIVE
+                threads: 4
+          EOF
 
       - name: lightdash deploy
         env:
           LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
           LIGHTDASH_URL: https://app.lightdash.cloud
           LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
-        run: lightdash deploy
+        run: lightdash deploy --profiles-dir .
