@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   lightdash-deploy:
@@ -55,4 +58,9 @@ jobs:
           LIGHTDASH_API_KEY: ${{ secrets.LIGHTDASH_API_KEY }}
           LIGHTDASH_URL: https://app.lightdash.cloud
           LIGHTDASH_PROJECT_UUID: 3f159052-6c8d-44e5-86d7-2a8592a503c5
-        run: lightdash deploy --profiles-dir .
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            lightdash deploy --profiles-dir . --dry-run
+          else
+            lightdash deploy --profiles-dir .
+          fi
