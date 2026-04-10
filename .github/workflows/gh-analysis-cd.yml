@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Install dbt
+        run: pip install dbt-core==1.11.7 dbt-snowflake==1.11.3
+
       - name: Install Lightdash CLI
         run: npm install -g @lightdash/cli
 
