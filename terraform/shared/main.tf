@@ -5,6 +5,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "data-platform-tf-state-074308311757"
+    key            = "shared/terraform.tfstate"
+    region         = "eu-west-1"
+    dynamodb_table = "data-platform-tf-state-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {

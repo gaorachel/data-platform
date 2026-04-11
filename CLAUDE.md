@@ -38,7 +38,7 @@ If unsure which bucket a new source belongs to, ask before writing any code.
 - **No Docker / no ECR** — Lambda is zip deploy only
 - **No COPY INTO** — data stays in S3, queried via Snowflake external table
 - **No USER_SPECIFIED partitions** — use `PARTITION_TYPE = AUTO`
-- **No S3 Terraform backend yet** — state is local
+- **Terraform remote state** — S3 backend at `data-platform-tf-state-074308311757` (eu-west-1), DynamoDB locking via `data-platform-tf-state-lock`; keys: `shared/terraform.tfstate`, `gharchive/terraform.tfstate`
 - **No hardcoded secrets** — API keys go in AWS Secrets Manager, never in env vars, code, or tfvars
 - **No requirements change without asking** — check before adding new Lambda dependencies
 - **No shared Terraform state between projects** — each project is fully independent
