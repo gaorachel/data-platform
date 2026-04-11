@@ -7,17 +7,19 @@ models:
       (human vs bot). Grain: one row per event_date + language + contributor_type.
       Repos with no detected language are grouped under 'unknown'. Incremental with a
       3-day lookback window so late-arriving events are captured on rerun.
-    meta:
-      label: "Language Activity"
+    config:
+      meta:
+        label: "Language Activity"
     columns:
       - name: event_date
         description: "Date of the push events. Part of the composite unique key."
         tests:
           - not_null
-        meta:
-          dimension:
-            type: date
-            label: "Event Date"
+        config:
+          meta:
+            dimension:
+              type: date
+              label: "Event Date"
 
       - name: language
         description: >
@@ -25,48 +27,54 @@ models:
           are grouped as 'unknown'. Part of the composite unique key.
         tests:
           - not_null
-        meta:
-          dimension:
-            type: string
-            label: "Language"
+        config:
+          meta:
+            dimension:
+              type: string
+              label: "Language"
 
       - name: contributor_type
         description: "'human' or 'bot'. Part of the composite unique key."
         tests:
           - not_null
           - accepted_values:
-              values: ['human', 'bot']
-        meta:
-          dimension:
-            type: string
-            label: "Contributor Type"
+              arguments:
+                values: ['human', 'bot']
+        config:
+          meta:
+            dimension:
+              type: string
+              label: "Contributor Type"
 
       - name: event_count
         description: "Total number of PushEvents for this date, language, and contributor type."
         tests:
           - not_null
-        meta:
-          metrics:
-            total_events:
-              type: sum
-              label: "Total Events"
+        config:
+          meta:
+            metrics:
+              total_events:
+                type: sum
+                label: "Total Events"
 
       - name: unique_contributors
         description: "Count of distinct actor logins for this date, language, and contributor type."
         tests:
           - not_null
-        meta:
-          metrics:
-            total_unique_contributors:
-              type: sum
-              label: "Total Unique Contributors"
+        config:
+          meta:
+            metrics:
+              total_unique_contributors:
+                type: sum
+                label: "Total Unique Contributors"
 
       - name: unique_repos
         description: "Count of distinct repositories active for this date, language, and contributor type."
         tests:
           - not_null
-        meta:
-          metrics:
-            total_unique_repos:
-              type: sum
-              label: "Total Unique Repos"
+        config:
+          meta:
+            metrics:
+              total_unique_repos:
+                type: sum
+                label: "Total Unique Repos"
