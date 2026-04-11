@@ -47,12 +47,6 @@ module "lambda" {
   lambda_zip_path = var.lambda_zip_path
 }
 
-module "s3" {
-  source = "./modules/s3"
-
-  bucket_name = data.aws_s3_bucket.main.bucket
-}
-
 # ── EventBridge ───────────────────────────────────────────────────────────────
 # GitHub Archive publishes the previous hour's file a few minutes after the
 # hour. Firing at :05 gives it time to appear before Lambda runs.
