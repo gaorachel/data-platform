@@ -15,9 +15,11 @@ WITH events AS (
         actor_login,
         repo_name
     FROM {{ ref('int_gharchive__events_enriched') }}
-    {% if is_incremental() %}
-    WHERE event_date >= DATEADD(day, -3, CURRENT_DATE)
-    {% endif %}
+    WHERE 1=1
+        AND event_date <= DATEADD(day, -1, CURRENT_DATE) -- exclude today's incomplete data
+        {% if is_incremental() %}
+        AND event_date >= DATEADD(day, -3, CURRENT_DATE)
+        {% endif %}
 
 )
 
@@ -25,11 +27,12 @@ SELECT
     event_date,
     language,
     contributor_type,
-    COUNT(*)                   AS event_count,
+    COUNT(*)                    AS event_count,
     COUNT(DISTINCT actor_login) AS unique_contributors,
-    COUNT(DISTINCT repo_name)  AS unique_repos
-
+    COUNT(DISTINCT repo_name)   AS unique_repos,
+    CURRENT_TIMESTAMP           AS _sdc_batched_at
 FROM events
-WHERE event_date <= DATEADD(day, -1, CURRENT_DATE) -- ensure we only include complete days in the results
-
-GROUP BY event_date, language, contributor_type
+GROUP BY 
+    event_date, 
+    language, 
+    contributor_type
