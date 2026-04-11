@@ -27,7 +27,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['PushEvent']
+              arguments:
+                values: ['PushEvent']
 
       - name: created_at
         description: "Timestamp when the event was created."
@@ -53,4 +54,5 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['human', 'bot']
+              arguments:
+                values: ['human', 'bot']

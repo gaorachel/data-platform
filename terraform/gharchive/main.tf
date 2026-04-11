@@ -9,6 +9,14 @@ terraform {
       version = "~> 1.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "data-platform-tf-state-074308311757"
+    key            = "gharchive/terraform.tfstate"
+    region         = "eu-west-1"
+    dynamodb_table = "data-platform-tf-state-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -37,12 +45,6 @@ module "lambda" {
   s3_bucket_name  = data.aws_s3_bucket.main.bucket
   s3_bucket_arn   = data.aws_s3_bucket.main.arn
   lambda_zip_path = var.lambda_zip_path
-}
-
-module "s3" {
-  source = "./modules/s3"
-
-  bucket_name = data.aws_s3_bucket.main.bucket
 }
 
 # ── EventBridge ───────────────────────────────────────────────────────────────

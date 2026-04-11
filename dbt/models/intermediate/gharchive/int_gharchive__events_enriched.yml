@@ -50,7 +50,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['human', 'bot']
+              arguments:
+                values: ['human', 'bot']
 
       - name: language
         description: >

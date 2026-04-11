@@ -5,6 +5,14 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "s3" {
+    bucket         = "data-platform-tf-state-074308311757"
+    key            = "shared/terraform.tfstate"
+    region         = "eu-west-1"
+    dynamodb_table = "data-platform-tf-state-lock"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -117,4 +125,54 @@ resource "aws_s3_bucket_logging" "restricted" {
   bucket        = aws_s3_bucket.restricted.id
   target_bucket = aws_s3_bucket.main.id
   target_prefix = "access-logs/restricted/"
+}
+
+# ── Storage tiering — main bucket ─────────────────────────────────────────────
+# aws_s3_bucket_lifecycle_configuration replaces ALL rules on a bucket when
+# applied, so all prefix-scoped rules must live in a single resource here.
+# Do not create a separate aws_s3_bucket_lifecycle_configuration in any project
+# module that targets this bucket — it will silently overwrite these rules.
+
+resource "aws_s3_bucket_lifecycle_configuration" "main" {
+  bucket = aws_s3_bucket.main.id
+
+  rule {
+    id     = "gharchive-raw-tiering"
+    status = "Enabled"
+
+    filter {
+      prefix = "raw/gharchive/"
+    }
+
+    # Queried frequently in the first month (dbt runs, Snowflake AUTO_REFRESH)
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    # After 90 days, queries are rare — archive to reduce storage cost
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+  }
+
+  rule {
+    id     = "github-repos-raw-tiering"
+    status = "Enabled"
+
+    filter {
+      prefix = "raw/github-repos/"
+    }
+
+    transition {
+      days          = 30
+      storage_class = "STANDARD_IA"
+    }
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+  }
 }
