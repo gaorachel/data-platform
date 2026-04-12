@@ -29,6 +29,13 @@ Two pipelines feed the GitHub analysis layer — hourly event ingestion from Git
 
 ![GitHub analysis architecture](docs/github-analysis-architecture.svg)
 
+## Live
+
+| Tool | URL |
+|---|---|
+| Streamlit | [Platform Overview](https://data-platform-f2by2br6nn3zrkbwt6ue8k.streamlit.app/) |
+| Lightdash | [GitHub Repo Analyses Overtime](https://eu1.lightdash.cloud/projects/3f159052-6c8d-44e5-86d7-2a8592a503c5/dashboards/4bbebca2-4851-4f19-97ef-94aef52de5b9/view) |
+
 ## Running locally
 
 ```bash
@@ -43,7 +50,6 @@ make deploy && make invoke
 ```
 
 See individual project READMEs for details.
-
 
 ## S3 bucket strategy
 
