@@ -32,6 +32,8 @@ SELECT
     COUNT(DISTINCT repo_name)   AS unique_repos,
     CURRENT_TIMESTAMP           AS _sdc_batched_at
 FROM events
+WHERE 1=1
+    AND language != 'unknown' -- filter out events with unknown language to focus on meaningful trends
 GROUP BY 
     event_date, 
     language, 

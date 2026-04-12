@@ -16,6 +16,9 @@ __pycache__/
 # Build artifacts
 *.zip
 
+# Streamlit
+streamlit/.streamlit/secrets.toml
+
 # dbt
 dbt/profiles.yml
 dbt/target/
