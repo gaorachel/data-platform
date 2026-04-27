@@ -22,6 +22,13 @@ jobs:
       - name: Install dbt
         run: pip install dbt-core==1.11.7 dbt-snowflake==1.11.3
 
+      - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+        run: |
+          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_rsa_key.p8
+          chmod 600 /tmp/snowflake_rsa_key.p8
+
       - name: Write profiles.yml
         run: |
           cat > profiles.yml <<EOF
@@ -32,7 +39,7 @@ jobs:
                 type: snowflake
                 account: "${{ secrets.SNOWFLAKE_ACCOUNT }}"
                 user: "${{ secrets.SNOWFLAKE_USER }}"
-                password: "${{ secrets.SNOWFLAKE_PASSWORD }}"
+                private_key_path: "/tmp/snowflake_rsa_key.p8"
                 role: ACCOUNTADMIN
                 database: DATA_PLATFORM
                 warehouse: COMPUTE_WH
@@ -99,19 +106,16 @@ jobs:
         env:
           SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
           SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
         run: |
           python3 -c "
           import os
           acct = os.environ['SNOWFLAKE_ACCOUNT']
           org, name = acct.split('-', 1)
           user = os.environ['SNOWFLAKE_USER']
-          pwd  = os.environ['SNOWFLAKE_PASSWORD']
           lines = [
               f'snowflake_organization_name = \"{org}\"',
               f'snowflake_account_name      = \"{name}\"',
               f'snowflake_user              = \"{user}\"',
-              f'snowflake_password          = \"{pwd}\"',
           ]
           print('\n'.join(lines))
           " > terraform/gharchive/snowflake_ci.tfvars
@@ -123,6 +127,8 @@ jobs:
       - name: Terraform plan — gharchive
         id: plan-gharchive
         continue-on-error: true
+        env:
+          TF_VAR_snowflake_private_key: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
         run: |
           terraform plan -no-color \
             -var-file="snowflake_ci.tfvars" \

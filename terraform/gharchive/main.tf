@@ -27,7 +27,8 @@ provider "snowflake" {
   organization_name        = var.snowflake_organization_name
   account_name             = var.snowflake_account_name
   user                     = var.snowflake_user
-  password                 = var.snowflake_password
+  authenticator            = "SNOWFLAKE_JWT"
+  private_key              = var.snowflake_private_key
   role                     = var.snowflake_role
   preview_features_enabled = ["snowflake_storage_integration_resource", "snowflake_stage_resource", "snowflake_external_table_resource"]
 }
@@ -189,6 +190,20 @@ resource "aws_secretsmanager_secret_version" "github_pat" {
   }
 }
 
+resource "aws_secretsmanager_secret" "snowflake_private_key" {
+  name        = "data-platform/snowflake/private-key"
+  description = "RSA private key for Snowflake key-pair authentication"
+}
+
+resource "aws_secretsmanager_secret_version" "snowflake_private_key" {
+  secret_id     = aws_secretsmanager_secret.snowflake_private_key.id
+  secret_string = var.snowflake_private_key
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
 # ── Snowflake IAM: extend to raw/github-repos/* ───────────────────────────────
 # The existing snowflake_s3_read policy covers raw/gharchive/* only.
 # This separate policy grants read on the new prefix without modifying the
@@ -225,18 +240,21 @@ module "lambda_github_repos" {
   s3_bucket_name  = data.aws_s3_bucket.main.bucket
   s3_bucket_arn   = data.aws_s3_bucket.main.arn
   lambda_zip_path = var.lambda_repos_zip_path
-  secret_arn      = aws_secretsmanager_secret.github_pat.arn
+  secret_arns = [
+    aws_secretsmanager_secret.github_pat.arn,
+    aws_secretsmanager_secret.snowflake_private_key.arn,
+  ]
 
   environment_variables = {
-    S3_BUCKET           = data.aws_s3_bucket.main.bucket
-    SECRET_NAME         = aws_secretsmanager_secret.github_pat.name
-    SNOWFLAKE_ACCOUNT   = local.snowflake_account
-    SNOWFLAKE_USER      = var.snowflake_user
-    SNOWFLAKE_PASSWORD  = var.snowflake_password
-    SNOWFLAKE_DATABASE  = "DATA_PLATFORM"
-    SNOWFLAKE_SCHEMA    = "GHARCHIVE"
-    SNOWFLAKE_WAREHOUSE = "COMPUTE_WH"
-    TOP_N_REPOS         = "100"
+    S3_BUCKET                        = data.aws_s3_bucket.main.bucket
+    SECRET_NAME                      = aws_secretsmanager_secret.github_pat.name
+    SNOWFLAKE_ACCOUNT                = local.snowflake_account
+    SNOWFLAKE_USER                   = var.snowflake_user
+    SNOWFLAKE_PRIVATE_KEY_SECRET_NAME = aws_secretsmanager_secret.snowflake_private_key.name
+    SNOWFLAKE_DATABASE               = "DATA_PLATFORM"
+    SNOWFLAKE_SCHEMA                 = "GHARCHIVE"
+    SNOWFLAKE_WAREHOUSE              = "COMPUTE_WH"
+    TOP_N_REPOS                      = "100"
   }
 }
 

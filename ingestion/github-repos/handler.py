@@ -7,6 +7,12 @@ from datetime import datetime, timezone
 import boto3
 import requests
 import snowflake.connector
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    load_pem_private_key,
+)
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -15,7 +21,7 @@ S3_BUCKET = os.environ["S3_BUCKET"]
 SECRET_NAME = os.environ["SECRET_NAME"]
 SNOWFLAKE_ACCOUNT = os.environ["SNOWFLAKE_ACCOUNT"]
 SNOWFLAKE_USER = os.environ["SNOWFLAKE_USER"]
-SNOWFLAKE_PASSWORD = os.environ["SNOWFLAKE_PASSWORD"]
+SNOWFLAKE_PRIVATE_KEY_SECRET_NAME = os.environ["SNOWFLAKE_PRIVATE_KEY_SECRET_NAME"]
 SNOWFLAKE_DATABASE = os.environ["SNOWFLAKE_DATABASE"]
 SNOWFLAKE_SCHEMA = os.environ["SNOWFLAKE_SCHEMA"]
 SNOWFLAKE_WAREHOUSE = os.environ["SNOWFLAKE_WAREHOUSE"]
@@ -29,6 +35,18 @@ def get_github_token() -> str:
     response = client.get_secret_value(SecretId=SECRET_NAME)
     secret = json.loads(response["SecretString"])
     return secret["token"]
+
+
+def get_snowflake_private_key() -> bytes:
+    client = boto3.client("secretsmanager")
+    response = client.get_secret_value(SecretId=SNOWFLAKE_PRIVATE_KEY_SECRET_NAME)
+    pem = response["SecretString"].encode()
+    key = load_pem_private_key(pem, password=None)
+    return key.private_bytes(
+        encoding=Encoding.DER,
+        format=PrivateFormat.PKCS8,
+        encryption_algorithm=NoEncryption(),
+    )
 
 
 def get_top_bot_repos(conn: snowflake.connector.SnowflakeConnection) -> list[str]:
@@ -113,7 +131,7 @@ def lambda_handler(event: dict, context: object) -> dict:
     conn = snowflake.connector.connect(
         account=SNOWFLAKE_ACCOUNT,
         user=SNOWFLAKE_USER,
-        password=SNOWFLAKE_PASSWORD,
+        private_key=get_snowflake_private_key(),
         database=SNOWFLAKE_DATABASE,
         schema=SNOWFLAKE_SCHEMA,
         warehouse=SNOWFLAKE_WAREHOUSE,
