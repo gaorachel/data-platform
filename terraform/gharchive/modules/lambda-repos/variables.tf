@@ -18,9 +18,9 @@ variable "lambda_zip_path" {
   type        = string
 }
 
-variable "secret_arn" {
-  description = "ARN of the Secrets Manager secret the Lambda is allowed to read (GitHub PAT)"
-  type        = string
+variable "secret_arns" {
+  description = "ARNs of the Secrets Manager secrets the Lambda is allowed to read (GitHub PAT, Snowflake private key)"
+  type        = list(string)
 }
 
 variable "environment_variables" {

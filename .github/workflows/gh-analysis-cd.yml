@@ -34,6 +34,13 @@ jobs:
       - name: Install Lightdash CLI
         run: npm install -g @lightdash/cli@0.2746.2
 
+      - name: Write Snowflake private key
+        env:
+          SNOWFLAKE_PRIVATE_KEY: ${{ secrets.SNOWFLAKE_PRIVATE_KEY }}
+        run: |
+          echo "$SNOWFLAKE_PRIVATE_KEY" > /tmp/snowflake_rsa_key.p8
+          chmod 600 /tmp/snowflake_rsa_key.p8
+
       - name: Write profiles.yml
         run: |
           cat > profiles.yml <<EOF
@@ -44,7 +51,7 @@ jobs:
                 type: snowflake
                 account: "${{ secrets.SNOWFLAKE_ACCOUNT }}"
                 user: "${{ secrets.SNOWFLAKE_USER }}"
-                password: "${{ secrets.SNOWFLAKE_PASSWORD }}"
+                private_key_path: "/tmp/snowflake_rsa_key.p8"
                 role: ACCOUNTADMIN
                 database: DATA_PLATFORM
                 warehouse: COMPUTE_WH

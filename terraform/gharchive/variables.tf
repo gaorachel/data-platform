@@ -32,8 +32,8 @@ variable "snowflake_user" {
   type        = string
 }
 
-variable "snowflake_password" {
-  description = "Password for snowflake_username. Pass via snowflake.tfvars, never hardcode."
+variable "snowflake_private_key" {
+  description = "PEM content of the RSA private key for Snowflake key-pair auth. Pass via snowflake.tfvars, never hardcode."
   type        = string
   sensitive   = true
 }

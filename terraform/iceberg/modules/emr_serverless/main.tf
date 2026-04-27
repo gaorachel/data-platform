@@ -127,20 +127,31 @@ resource "aws_iam_role_policy" "cloudwatch_logs" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogStreams",
-        "logs:DescribeLogGroups"
-      ]
-      Resource = [
-        "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/emr-serverless/*",
-        "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/emr-serverless/*:log-stream:*"
-      ]
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = [
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/emr-serverless/*",
+          "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:/aws/emr-serverless/*:log-stream:*"
+        ]
+      },
+      # logs:DescribeLogGroups is a list-all API — IAM evaluates it against an
+      # empty resource ARN, so it cannot be scoped to a specific log group.
+      # Isolated in its own statement with Resource = "*" to keep the scoped
+      # statement above clean. Without this, EMR Serverless's CloudWatch log
+      # exporter fails at job start before any user code runs.
+      {
+        Effect   = "Allow"
+        Action   = ["logs:DescribeLogGroups"]
+        Resource = "*"
+      }
+    ]
   })
 }
 
@@ -158,9 +169,12 @@ resource "aws_emrserverless_application" "this" {
   architecture  = "ARM64"
 
   maximum_capacity {
-    cpu    = "4 vCPU"
-    memory = "16 GB"
-    disk   = "50 GB"
+    # Sized for a single batch Spark job: 1 driver + up to 6 executors at
+    # 2 vCPU/8 GB each. 4 vCPU/16 GB was too small to schedule even one
+    # executor alongside the driver.
+    cpu    = "16 vCPU"
+    memory = "64 GB"
+    disk   = "200 GB"
   }
 
   auto_start_configuration {

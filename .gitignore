@@ -13,6 +13,9 @@ skills-lock.json
 __pycache__/
 *.pyc
 
+# Local env files
+.env
+
 # Build artifacts
 *.zip
 
